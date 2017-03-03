@@ -350,7 +350,7 @@ class Analyzer(object):
         else:
             try:
                 #[d, sr] = librosa.load(filename, sr=self.target_sr)
-                d, sr = audio_read.audio_read(filename, sr=self.target_sr, channels=1)
+                d, sr, metadata = audio_read.audio_read(filename, sr=self.target_sr, channels=1)
             except: # audioread.NoBackendError:
                 message = "wavfile2peaks: Error reading " + filename
                 if self.fail_on_error:
@@ -374,7 +374,7 @@ class Analyzer(object):
         self.soundfiledur = dur
         self.soundfiletotaldur += dur
         self.soundfilecount += 1
-        return peaks
+        return ( peaks, metadata )
 
     def wavfile2hashes(self, filename):
         """ Read a soundfile and return its fingerprint hashes as a
@@ -391,7 +391,7 @@ class Analyzer(object):
             self.soundfiletotaldur += dur
             self.soundfilecount += 1
         else:
-            peaks = self.wavfile2peaks(filename, self.shifts)
+            peaks, metadata = self.wavfile2peaks(filename, self.shifts)
             if len(peaks) == 0:
               return []
             # Did we get returned a list of lists of peaks due to shift?
@@ -409,7 +409,7 @@ class Analyzer(object):
             hashes = sorted(list(set(query_hashes)))
 
         #print("wavfile2hashes: read", len(hashes), "hashes from", filename)
-        return hashes
+        return ( hashes, metadata )
 
     ########### functions to link to actual hash table index database #######
 
@@ -435,8 +435,8 @@ class Analyzer(object):
         #                                                     density=density,
         #                                                     n_fft=n_fft,
         #                                                     n_hop=n_hop)))
-        hashes = self.wavfile2hashes(filename)
-        hashtable.store(filename, hashes)
+        hashes, metadata = self.wavfile2hashes(filename)
+        hashtable.store(filename, hashes, metadata)
         #return (len(d)/float(sr), len(hashes))
         #return (np.max(hashes, axis=0)[0]*n_hop/float(sr), len(hashes))
         # soundfiledur is set up in wavfile2hashes, use result here
@@ -532,7 +532,7 @@ def extract_features(track_obj, *args, **kwargs):
     extract_features_analyzer.n_fft = n_fft
     extract_features_analyzer.n_hop = n_hop
     extract_features_analyzer.target_sr = sr
-    return extract_features_analyzer.wavfile2hashes(track_obj.fn_audio)
+    return extract_features_analyzer.wavfile2hashes(track_obj.fn_audio)[0]
 
 
 # Handy function to build a new hash table from a file glob pattern

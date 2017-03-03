@@ -86,11 +86,11 @@ def file_precompute_peaks_or_hashes(analyzer, filename, precompdir,
       if hashes_not_peaks:
         type = "hashes"
         saver = audfprint_analyze.hashes_save
-        output = analyzer.wavfile2hashes(filename)
+        output, metadata = analyzer.wavfile2hashes(filename)
       else:
         type = "peaks"
         saver = audfprint_analyze.peaks_save
-        output = analyzer.wavfile2peaks(filename)
+        output, metadata = analyzer.wavfile2peaks(filename)
       # save the hashes or peaks file
       if len(output) == 0:
         message = "Zero length analysis for " + filename + " -- not saving."
@@ -121,8 +121,8 @@ def make_ht_from_list(analyzer, filelist, hashbits, depth, maxtime, pipe=None):
     ht = hash_table.HashTable(hashbits=hashbits, depth=depth, maxtime=maxtime)
     # Add in the files
     for filename in filelist:
-        hashes = analyzer.wavfile2hashes(filename)
-        ht.store(filename, hashes)
+        hashes, metadata = analyzer.wavfile2hashes(filename)
+        ht.store(filename, hashes, metadata)
     # Pass back to caller
     if pipe:
         pipe.send(ht)

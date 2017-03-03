@@ -36,7 +36,7 @@ class HashTable(object):
 
     :usage:
        >>> ht = HashTable(size=2**10, depth=100)
-       >>> ht.store('identifier', list_of_landmark_time_hash_pairs)
+       >>> ht.store('identifier', list_of_landmark_time_hash_pairs, metadata)
        >>> list_of_ids_tracks = ht.get_hits(hash)
     """
 
@@ -55,6 +55,8 @@ class HashTable(object):
             self.counts = np.zeros(size, dtype=np.int32)
             # map names to IDs
             self.names = []
+            # store metadata of read files
+            self.metadata = []
             # track number of hashes stored per id
             self.hashesperid = np.zeros(0, np.uint32)
             # Empty params
@@ -72,7 +74,7 @@ class HashTable(object):
         self.hashesperid.resize(0)
         self.dirty = True
 
-    def store(self, name, timehashpairs):
+    def store(self, name, timehashpairs, metadata):
         """ Store a list of hashes in the hash table
             associated with a particular name (or integer ID) and time.
         """
@@ -117,6 +119,7 @@ class HashTable(object):
             self.counts[hash_] = count + 1
         # Record how many hashes we (attempted to) save for this id
         self.hashesperid[id_] += len(timehashpairs)
+        self.metadata[id_] = metadata
         # Mark as unsaved
         self.dirty = True
 
@@ -297,8 +300,10 @@ class HashTable(object):
                     id_ = self.names.index(None)
                     self.names[id_] = name
                     self.hashesperid[id_] = 0
+                    self.metadata[id_] = {}
                 except ValueError:
                     self.names.append(name)
+                    self.metadata.append({})
                     self.hashesperid = np.append(self.hashesperid, [0])
             id_ = self.names.index(name)
         else:

@@ -307,7 +307,7 @@ class Matcher(object):
             timeoffs, rawmatchcount), also length of input file in sec,
             and count of raw query hashes extracted
         """
-        q_hashes = analyzer.wavfile2hashes(filename)
+        q_hashes, metadata = analyzer.wavfile2hashes(filename)
         # Fake durations as largest hash time
         if len(q_hashes) == 0:
             durd = 0.0
@@ -322,21 +322,22 @@ class Matcher(object):
                   ('%.3f'%durd), "s " \
                   "to", len(q_hashes), "hashes"
         # Run query
-        rslts = self.match_hashes(ht, q_hashes)
+        rslts, metadata = self.match_hashes(ht, q_hashes)
         # Post filtering
         if self.sort_by_time:
             rslts = rslts[(-rslts[:, 2]).argsort(), :]
-        return (rslts[:self.max_returns, :], durd, len(q_hashes))
+        return (rslts[:self.max_returns, :], durd, len(q_hashes), metadata)
 
     def file_match_to_msgs(self, analyzer, ht, qry, number=None):
         """ Perform a match on a single input file, return list
             of message strings """
-        rslts, dur, nhash = self.match_file(analyzer, ht, qry, number)
+        rslts, dur, nhash, metadata = self.match_file(analyzer, ht, qry, number)
         t_hop = analyzer.n_hop/float(analyzer.target_sr)
         if self.verbose:
             qrymsg = qry + (' %.1f '%dur) + "sec " + str(nhash) + " raw hashes"
         else:
-            qrymsg = qry
+            qrymsg = ''
+            # qrymsg = qry
 
         msgrslt = []
         if len(rslts) == 0:
@@ -374,7 +375,7 @@ class Matcher(object):
             plotted over a spectrogram """
         # Make the spectrogram
         #d, sr = librosa.load(filename, sr=analyzer.target_sr)
-        d, sr = audio_read.audio_read(filename, sr=analyzer.target_sr, channels=1)
+        d, sr, metadata = audio_read.audio_read(filename, sr=analyzer.target_sr, channels=1)
         sgram = np.abs(librosa.stft(d, n_fft=analyzer.n_fft,
                                     hop_length=analyzer.n_hop,
                                     window=np.hanning(analyzer.n_fft+2)[1:-1]))
@@ -393,7 +394,7 @@ class Matcher(object):
                                  y_axis='linear', x_axis='time',
                                  cmap='gray_r', vmin=-80.0, vmax=0)
         # Do the match?
-        q_hashes = analyzer.wavfile2hashes(filename)
+        q_hashes, metadata = analyzer.wavfile2hashes(filename)
         # Run query, get back the hashes for match zero
         results, matchhashes = self.match_hashes(ht, q_hashes, hashesfor=0)
         if self.sort_by_time:
@@ -423,7 +424,7 @@ def localtest():
     qry = 'query.mp3'
     hash_tab = audfprint_analyze.glob2hashtable(pat)
     matcher = Matcher()
-    rslts, dur, nhash = matcher.match_file(audfprint_analyze.g2h_analyzer,
+    rslts, dur, nhash, metadata = matcher.match_file(audfprint_analyze.g2h_analyzer,
                                            hash_tab, qry)
     t_hop = 0.02322
     print "Matched", qry, "(", dur, "s,", nhash, "hashes)", \

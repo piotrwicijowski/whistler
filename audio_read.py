@@ -19,6 +19,7 @@
 
 import os
 import numpy as np
+import re
 
 def audio_read(filename, sr=None, channels=None):
     """Read a soundfile, return (d, sr)."""
@@ -30,6 +31,7 @@ def audio_read(filename, sr=None, channels=None):
     with FFmpegAudioFile(os.path.realpath(filename),
                          sample_rate=sr, channels=channels) as input_file:
         sr = input_file.sample_rate
+        metadata = input_file.metadata
         channels = input_file.channels
         s_start = int(np.floor(sr * offset) * channels)
         if duration is None:
@@ -67,7 +69,7 @@ def audio_read(filename, sr=None, channels=None):
     # Final cleanup for dtype and contiguity
     y = np.ascontiguousarray(y, dtype=dtype)
 
-    return (y, sr)
+    return (y, sr, metadata)
 
 
 def buf_to_float(x, n_bytes=2, dtype=np.float32):
@@ -153,6 +155,29 @@ class FFmpegAudioFile(object):
     def __init__(self, filename, channels=None, sample_rate=None, block_size=4096):
         if not os.path.isfile(filename):
             raise ValueError(filename + " not found.")
+        # get metadata from file
+        self.metadata = {}
+        metadata_include=['artist','album','title','genre','track']
+        try:
+            metadata_popen_args = ['ffmpeg', '-i', filename, '-f', 'ffmetadata', '-']
+            metadata_proc =  subprocess.Popen(
+                metadata_popen_args,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                )
+            metadata_proc.wait()
+            for index, line in enumerate( iter(metadata_proc.stdout.readline, '')):
+                line = line.rstrip('\n')
+                if(index==0 or line==''):
+                    continue
+                tag = re.split('=',line)
+                if len(tag) == 2:
+                    [tagname,tagvalue] = tag
+                    if(tagname in metadata_include):
+                        self.metadata[tagname]=tagvalue
+        except Exception as e:
+            print(str(e))
+
+        # procede with reading the audio file
         popen_args = ['ffmpeg', '-i', filename, '-f', 's16le']
         self.channels = channels
         self.sample_rate = sample_rate
