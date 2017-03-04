@@ -19,27 +19,32 @@ elif platform == "darwin":
     FFMPEG_BIN = "ffmpeg"     # on OSX
     FFMPEG_AUDIO_DEVICE = "dsound"
 
+def recordAndMatch(database_file_path):
+    with tempfile.NamedTemporaryFile(suffix='.mp3') as recording_file:
+        command = [FFMPEG_BIN,
+                '-f', FFMPEG_AUDIO_DEVICE,
+                '-i', 'pulse',
+                # '-i', 'default',
+                '-y',
+                '-t', '00:30',
+                recording_file.name]
+        recording_process = subprocess.Popen(command,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        recording_process.wait()
+        audfprint.main(['audfprint.py', 'match',
+            '--dbase',
+            database_file_path,
+            recording_file.name])
+
 def main(argv):
     database_file_path = argv[1] if len(argv)>1 else os.path.join(os.path.dirname(os.path.abspath(__file__)),'fpdbase.pklz')
     if os.path.isfile(database_file_path) and os.access(database_file_path, os.R_OK):
-        with tempfile.NamedTemporaryFile(suffix='.mp3') as recording_file:
-            command = [FFMPEG_BIN,
-                    '-f', FFMPEG_AUDIO_DEVICE,
-                    '-i', 'default',
-                    '-y',
-                    '-t', '00:30',
-                    recording_file.name]
-            recording_process = subprocess.Popen(command,
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            print('recording, please wait...')
-            recording_process.wait()
-            audfprint.main(['audfprint.py', 'match',
-                '--dbase',
-                database_file_path,
-                recording_file.name])
-            raw_input('Press Enter to exit')
+        print('Recording, please wait...')
+        recordAndMatch(database_file_path)
     else:
         print('The database file is missing or is not readable')
+    raw_input('Press Enter to exit')
+
 
 if __name__ == "__main__":
     main(sys.argv)
