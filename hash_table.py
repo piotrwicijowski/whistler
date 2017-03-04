@@ -71,6 +71,7 @@ class HashTable(object):
         self.table[:,:] = 0
         self.counts[:] = 0
         self.names = []
+        self.metadata = []
         self.hashesperid.resize(0)
         self.dirty = True
 
@@ -204,6 +205,7 @@ class HashTable(object):
         self.table = temp.table
         self.counts = temp.counts
         self.names = temp.names
+        self.metadata = temp.metadata
         self.hashesperid = np.array(temp.hashesperid).astype(np.uint32)
         self.ht_version = temp.ht_version
         self.dirty = False
@@ -262,6 +264,7 @@ class HashTable(object):
         ncurrent = len(self.names)
         #size = len(self.counts)
         self.names += ht.names
+        self.metadata += ht.metadata
         self.hashesperid = np.append(self.hashesperid, ht.hashesperid)
         # All the table values need to be increased by the ncurrent
         idoffset = (1 << self.maxtimebits) * ncurrent
@@ -331,6 +334,7 @@ class HashTable(object):
             self.counts[hash_] = len(vals)
             hashes_removed += np.sum(id_in_table[hash_])
         self.names[id_] = None
+        self.metadata[id_] = None
         self.hashesperid[id_] = 0
         self.dirty = True
         print("Removed", name, "(", hashes_removed, "hashes).")
@@ -355,6 +359,7 @@ class HashTable(object):
         """ List all the known items. """
         if not print_fn:
             print_fn = print
-        for name, count in zip(self.names, self.hashesperid):
+        for name, count, metadata in zip(self.names, self.hashesperid, self.metadata):
             if name:
-                print_fn(name + " (" + str(count) + " hashes)")
+                print_fn(name + " " + metadata['artist'] + " - " + metadata['title'] + " (" + str(count) + " hashes)")
+                # print_fn(name + " (" + str(count) + " hashes)")
