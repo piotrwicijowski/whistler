@@ -10,7 +10,7 @@ from __future__ import print_function
 
 import numpy as np
 import random
-import cPickle as pickle
+import _pickle as pickle
 import os, gzip
 import scipy.io
 import math
@@ -145,7 +145,7 @@ class HashTable(object):
         maxtimemask = (1 << self.maxtimebits) - 1
         hashmask = (1 << self.hashbits) - 1
         # Fill in
-        for ix in xrange(nhashes):
+        for ix in range(nhashes):
             time_ = hashes[ix][0]
             hash_ = hashmask & hashes[ix][1]
             nids = min(self.depth, self.counts[hash_])
@@ -169,7 +169,7 @@ class HashTable(object):
             for key in params:
                 self.params[key] = params[key]
         with gzip.open(name, 'wb') as f:
-            pickle.dump(self, f, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self, f, 2)
         self.dirty = False
         nhashes = sum(self.counts)
         print("Saved fprints for", sum(n is not None for n in self.names), 

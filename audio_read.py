@@ -165,7 +165,8 @@ class FFmpegAudioFile(object):
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE
                 )
             metadata_proc.wait()
-            for index, line in enumerate( iter(metadata_proc.stdout.readline, '')):
+            for index, line in enumerate( metadata_proc.stdout):
+                line = line.decode('utf-8')
                 line = line.rstrip('\n')
                 if(index==0 or line==''):
                     continue

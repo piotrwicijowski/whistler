@@ -272,7 +272,7 @@ class Analyzer(object):
         # Take spectrogram
         mywin = np.hanning(self.n_fft+2)[1:-1]
         sgram = np.abs(librosa.stft(d, n_fft=self.n_fft,
-                                    hop_length=self.n_hop,
+                                    hop_length=int(self.n_hop),
                                     window=mywin))
         sgrammax = np.max(sgram)
         if sgrammax > 0.0:
@@ -297,7 +297,7 @@ class Analyzer(object):
         # build a list of peaks we ended up with
         scols = np.shape(sgram)[1]
         pklist = []
-        for col in xrange(scols):
+        for col in range(scols):
             for bin in np.nonzero(peaks[:, col])[0]:
                 pklist.append( (col, bin) )
         return pklist
@@ -315,15 +315,15 @@ class Analyzer(object):
             # Find column of the final peak in the list
             scols = pklist[-1][0] + 1
             # Convert (col, bin) list into peaks_at[col] lists
-            peaks_at = [[] for col in xrange(scols)]
+            peaks_at = [[] for col in range(scols)]
             for (col, bin) in pklist:
                 peaks_at[col].append(bin)
 
             # Build list of landmarks <starttime F1 endtime F2>
-            for col in xrange(scols):
+            for col in range(scols):
                 for peak in peaks_at[col]:
                     pairsthispeak = 0
-                    for col2 in xrange(col+self.mindt,
+                    for col2 in range(col+self.mindt,
                                        min(scols, col+self.targetdt)):
                         if pairsthispeak < self.maxpairsperpeak:
                             for peak2 in peaks_at[col2]:

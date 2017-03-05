@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 
 from __future__ import print_function
 
@@ -58,7 +58,7 @@ def main(argv):
         print(matcher.recordAndMatch())
     else:
         print('The database file is missing or is not readable')
-    raw_input('Press Enter to exit')
+    input('Press Enter to exit')
 
 
 if __name__ == "__main__":

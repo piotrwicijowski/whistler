@@ -4,5 +4,7 @@ REM eval "\"$(winepath -u "$@")/audfprint/microphone_match.py\""
 REM however, due to the fact of multiple escapes
 REM " is equivalent to \\\"
 REM and \" is equivalent to \\\\\\\" (yes, that is seven backslashes)
-SET "expression=eval \\\"\\\\\\\"$(winepath -u \\\"%cd%\\\")/audfprint/microphone_match.py\\\\\\\"\\\""
+REM SET "expression=eval \\\"\\\\\\\"$(winepath -u \\\"%cd%\\\")/audfprint/microphone_match.py\\\\\\\"\\\""
 start /unix /usr/bin/xterm -e bash -c "%expression%"
+SET "expression=eval \\\"\\\\\\\"$(winepath -u \\\"%cd%\\\")/audfprint/microphone_match_gui.py\\\\\\\"\\\""
+start /unix /usr/bin/bash -c "%expression%"

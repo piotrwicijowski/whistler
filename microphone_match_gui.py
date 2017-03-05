@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python
 
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
