@@ -322,7 +322,7 @@ class Matcher(object):
                     ('%.3f'%durd), "s " \
                     "to", len(q_hashes), "hashes")
         # Run query
-        rslts, metadata = self.match_hashes(ht, q_hashes)
+        rslts = self.match_hashes(ht, q_hashes)
         # Post filtering
         if self.sort_by_time:
             rslts = rslts[(-rslts[:, 2]).argsort(), :]
