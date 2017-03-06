@@ -20,6 +20,21 @@
 import os
 import numpy as np
 import re
+from sys import platform
+
+if platform == "linux" or platform == "linux2":
+    FFMPEG_BIN = "ffmpeg"     # on Linux
+    FFMPEG_AUDIO_DEVICE = "alsa"
+    FFMPEG_INPUT = "pulse"
+    # FFMPEG_INPUT = "default"
+    # FFMPEG_AUDIO_DEVICE = "pulse"
+elif platform == "win32":
+    FFMPEG_BIN = "ffmpeg.exe" # on Windows
+    FFMPEG_AUDIO_DEVICE = "dshow"
+    FFMPEG_INPUT = u"audio=Mikrofon (Urz\u0105dzenie zgodne ze "
+# elif platform == "darwin":
+#     FFMPEG_BIN = "ffmpeg"     # on OSX
+#     FFMPEG_AUDIO_DEVICE = "dsound"
 
 def audio_read(filename, sr=None, channels=None):
     """Read a soundfile, return (d, sr)."""
@@ -159,7 +174,7 @@ class FFmpegAudioFile(object):
         self.metadata = {}
         metadata_include=['artist','album','title','genre','track']
         try:
-            metadata_popen_args = ['ffmpeg', '-i', filename, '-f', 'ffmetadata', '-']
+            metadata_popen_args = [FFMPEG_BIN, '-i', filename, '-f', 'ffmetadata', '-']
             metadata_proc =  subprocess.Popen(
                 metadata_popen_args,
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -179,7 +194,7 @@ class FFmpegAudioFile(object):
             print(str(e))
 
         # procede with reading the audio file
-        popen_args = ['ffmpeg', '-i', filename, '-f', 's16le']
+        popen_args = [FFMPEG_BIN, '-i', filename, '-f', 's16le']
         self.channels = channels
         self.sample_rate = sample_rate
         if channels:

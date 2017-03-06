@@ -7,10 +7,15 @@ used for the audfprint fingerprinter.
 2014-05-25 Dan Ellis dpwe@ee.columbia.edu
 """
 from __future__ import print_function
+import sys
+if sys.version_info >= (3,0):
+    import _pickle as pickle
+else:
+    import pickle as pickle
+    # import cPickle as pickle
 
 import numpy as np
 import random
-import _pickle as pickle
 import os, gzip
 import scipy.io
 import math
