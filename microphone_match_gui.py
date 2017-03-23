@@ -4,7 +4,15 @@ import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 import sys
 import os
-from PyQt5.QtWidgets import (QApplication, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QProgressBar)
+from PyQt5.QtWidgets import (QApplication,
+        QWidget,
+        QPushButton,
+        QVBoxLayout,
+        QHBoxLayout,
+        QLabel,
+        QSizePolicy,
+        QCheckBox,
+        QProgressBar)
 from PyQt5.QtCore import (QCoreApplication, QThread, QBasicTimer)
 import microphone_match
 
@@ -50,15 +58,22 @@ class MainWindow(QWidget):
 
         self.resultLabel = QLabel('Ready')
 
+        self.continuousCheckBox = QCheckBox()
+        self.continuousCheckBox.setText('Continuous')
+        self.continuousCheckBox.setChecked(self.continuousMatching)
+        self.continuousCheckBox.stateChanged.connect(self.toggleContinuous)
+
         self.progress = 0.0
         self.progressBar = QProgressBar()
         self.progressTimer = QBasicTimer()
+
         self.recResHBox = QHBoxLayout()
         self.recResHBox.addWidget(self.recordButton)
         self.recResHBox.addWidget(self.resultLabel)
 
         self.mainVBox = QVBoxLayout()
         self.mainVBox.addLayout(self.recResHBox)
+        self.mainVBox.addWidget(self.continuousCheckBox)
         self.mainVBox.addWidget(self.progressBar)
         self.mainVBox.addStretch(1)
         self.setLayout(self.mainVBox)
@@ -95,6 +110,10 @@ class MainWindow(QWidget):
             return
         self.progress = self.progress + 1/3.0
         self.progressBar.setValue(self.progress)
+
+    def toggleContinuous(self):
+        self.continuousMatching = self.continuousCheckBox.isChecked()
+        self.continuousCheckBox.setChecked(self.continuousMatching)
 
 if __name__ == '__main__':
     main(sys.argv)
