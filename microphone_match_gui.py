@@ -12,6 +12,8 @@ from PyQt5.QtWidgets import (QApplication,
         QLabel,
         QSizePolicy,
         QCheckBox,
+        QListWidget,
+        QListWidgetItem,
         QProgressBar)
 from PyQt5.QtCore import (QCoreApplication, QThread, QBasicTimer)
 import microphone_match
@@ -67,6 +69,8 @@ class MainWindow(QWidget):
         self.progressBar = QProgressBar()
         self.progressTimer = QBasicTimer()
 
+        self.recentList = []
+        self.recentListWidget = QListWidget()
         self.recResHBox = QHBoxLayout()
         self.recResHBox.addWidget(self.recordButton)
         self.recResHBox.addWidget(self.resultLabel)
@@ -74,8 +78,9 @@ class MainWindow(QWidget):
         self.mainVBox = QVBoxLayout()
         self.mainVBox.addLayout(self.recResHBox)
         self.mainVBox.addWidget(self.continuousCheckBox)
+        self.mainVBox.addWidget(self.recentListWidget)
         self.mainVBox.addWidget(self.progressBar)
-        self.mainVBox.addStretch(1)
+        # self.mainVBox.addStretch(1)
         self.setLayout(self.mainVBox)
         self.show()
 
@@ -93,7 +98,11 @@ class MainWindow(QWidget):
         self.recordButton.clicked.connect(self.interruptRecording)
 
     def recordingFinished(self):
-        self.resultLabel.setText(self.matcherThread.result)
+        currentResult = self.matcherThread.result
+        self.resultLabel.setText(currentResult)
+        if(len(self.recentList) == 0 or self.recentList[-1] != currentResult):
+            self.recentList.append(currentResult)
+            self.recentListWidget.addItem(QListWidgetItem(currentResult))
         self.progressBar.setValue(100)
         self.progress = 100.0
         self.progressTimer.stop()
