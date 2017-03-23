@@ -37,6 +37,7 @@ class MainWindow(QWidget):
         self.move(400,600)
         self.setWindowTitle('Swing.azm')
 
+        self.continuousMatching = True
         self.threadInterrupter = {'interrupted':False}
         self.continuousMatcher = microphone_match.ContinuousMatcher(self.threadInterrupter)
         self.matcherThread = RecorderMatcherThread(self.continuousMatcher)
@@ -81,9 +82,12 @@ class MainWindow(QWidget):
         self.progressBar.setValue(100)
         self.progress = 100.0
         self.progressTimer.stop()
-        self.recordButton.setText('Record')
-        self.recordButton.clicked.disconnect()
-        self.recordButton.clicked.connect(self.recordAndMatch)
+        if(self.continuousMatching and not self.threadInterrupter['interrupted']):
+            self.recordAndMatch()
+        else:
+            self.recordButton.setText('Record')
+            self.recordButton.clicked.disconnect()
+            self.recordButton.clicked.connect(self.recordAndMatch)
 
     def timerEvent(self, e):
         if self.progress >= 100:
