@@ -25,7 +25,7 @@ class RecorderMatcherThread(QThread):
         # database_file_path = QApplication.instance().arguments()[1] if len(QApplication.instance().arguments())>1 else os.path.join(os.path.dirname(os.path.abspath(__file__)),'fpdbase.pklz')
         # microphone_match.recordAndMatch(database_file_path)
         # self.recordButton.setText('Record')
-        self.result = self.matcher.recordAndMatch()
+        self.result = self.matcher.recordAndMatch2()
 
 class MainWindow(QWidget):
     def __init__(self):

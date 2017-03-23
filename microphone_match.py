@@ -38,7 +38,9 @@ class ContinuousMatcher(object):
         self.matcher = audfprint.setup_matcher(self.args)
         self.hash_tab = hash_table.HashTable(self.args['--dbase'])
         self.analyzer = audfprint.setup_analyzer(self.args)
-
+    def recordAndMatch2(self):
+        FFmpegArgs = {'FFMPEG_AUDIO_DEVICE' : FFMPEG_AUDIO_DEVICE, 'FFMPEG_INPUT': FFMPEG_INPUT}
+        return self.matcher.file_match_to_msgs(self.analyzer, self.hash_tab, FFmpegArgs, 0)[0]
     def recordAndMatch(self):
         recording_file = tempfile.NamedTemporaryFile(suffix='.mp3',delete=False)
         try:

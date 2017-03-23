@@ -43,7 +43,11 @@ def audio_read(filename, sr=None, channels=None):
     duration = None
     dtype = np.float32
     y = []
-    with FFmpegAudioFile(os.path.realpath(filename),
+    if isinstance(filename, basestring):
+        FFmpegArgs = os.path.realpath(filename)
+    elif isinstance(filename, dict):
+        FFmpegArgs = filename
+    with FFmpegAudioFile(FFmpegArgs,
                          sample_rate=sr, channels=channels) as input_file:
         sr = input_file.sample_rate
         metadata = input_file.metadata
@@ -167,34 +171,57 @@ class QueueReaderThread(threading.Thread):
 
 class FFmpegAudioFile(object):
     """An audio file decoded by the ffmpeg command-line utility."""
-    def __init__(self, filename, channels=None, sample_rate=None, block_size=4096):
-        if not os.path.isfile(filename):
+    def __init__(self, filenameOrDevice, channels=None, sample_rate=None, block_size=4096):
+        filename = ''
+        isFilename = False
+        FFmpegDevice = {}
+        isDevice = False
+        if isinstance(filenameOrDevice, basestring):
+            filename = filenameOrDevice
+            isFilename = True
+        elif isinstance(filenameOrDevice, dict):
+            FFmpegDevice = filenameOrDevice
+            isDevice = True
+        else:
+            raise ValueError(filenameOrDevice + " is neither a string nor dictionary")
+
+        if isFilename and not os.path.isfile(filename):
+        # if not os.path.isfile(filename):
             raise ValueError(filename + " not found.")
         # get metadata from file
         self.metadata = {}
         metadata_include=['artist','album','title','genre','track']
-        try:
-            metadata_popen_args = [FFMPEG_BIN, '-i', filename, '-f', 'ffmetadata', '-']
-            metadata_proc =  subprocess.Popen(
-                metadata_popen_args,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE
-                )
-            metadata_proc.wait()
-            for index, line in enumerate( metadata_proc.stdout):
-                line = line.decode('utf-8')
-                line = line.rstrip('\n')
-                if(index==0 or line==''):
-                    continue
-                tag = re.split('=',line)
-                if len(tag) == 2:
-                    [tagname,tagvalue] = tag
-                    if(tagname in metadata_include):
-                        self.metadata[tagname]=tagvalue
-        except Exception as e:
-            print(str(e))
+        if isFilename:
+            try:
+                metadata_popen_args = [FFMPEG_BIN, '-i', filename, '-f', 'ffmetadata', '-']
+                metadata_proc =  subprocess.Popen(
+                    metadata_popen_args,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                    )
+                metadata_proc.wait()
+                for index, line in enumerate( metadata_proc.stdout):
+                    line = line.decode('utf-8')
+                    line = line.rstrip('\n')
+                    if(index==0 or line==''):
+                        continue
+                    tag = re.split('=',line)
+                    if len(tag) == 2:
+                        [tagname,tagvalue] = tag
+                        if(tagname in metadata_include):
+                            self.metadata[tagname]=tagvalue
+            except Exception as e:
+                print(str(e))
 
         # procede with reading the audio file
-        popen_args = [FFMPEG_BIN, '-i', filename, '-f', 's16le']
+        if isFilename:
+            popen_args = [FFMPEG_BIN, '-i', filename, '-f', 's16le']
+        elif isDevice:
+            popen_args = [FFMPEG_BIN,
+                    '-f', FFmpegDevice['FFMPEG_AUDIO_DEVICE'],
+                    '-i', FFmpegDevice['FFMPEG_INPUT'],
+                    '-t', '00:30',
+                    '-f', 's16le']
+
         self.channels = channels
         self.sample_rate = sample_rate
         if channels:

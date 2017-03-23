@@ -342,7 +342,9 @@ class Analyzer(object):
             list of (time, bin) pairs.  If specified, resample to sr first.
             shifts > 1 causes hashes to be extracted from multiple shifts of
             waveform, to reduce frame effects.  """
-        ext = os.path.splitext(filename)[1]
+        ext = ''
+        if isinstance(filename, basestring):
+            ext = os.path.splitext(filename)[1]
         if ext == PRECOMPPKEXT:
             # short-circuit - precomputed fingerprint file
             peaks = peaks_load(filename)
@@ -351,8 +353,9 @@ class Analyzer(object):
             try:
                 #[d, sr] = librosa.load(filename, sr=self.target_sr)
                 d, sr, metadata = audio_read.audio_read(filename, sr=self.target_sr, channels=1)
-            except: # audioread.NoBackendError:
-                message = "wavfile2peaks: Error reading " + filename
+            # except: # audioread.NoBackendError:
+            except Exception as e: # audioread.NoBackendError:
+                message = "wavfile2peaks: Error reading " + str(filename) + str(e)
                 if self.fail_on_error:
                   raise IOError(message)
                 print(message, "skipping")
@@ -381,7 +384,9 @@ class Analyzer(object):
             list of (time, hash) pairs.  If specified, resample to sr first.
             shifts > 1 causes hashes to be extracted from multiple shifts of
             waveform, to reduce frame effects.  """
-        ext = os.path.splitext(filename)[1]
+        ext = ''
+        if isinstance(filename, basestring):
+            ext = os.path.splitext(filename)[1]
         if ext == PRECOMPEXT:
             # short-circuit - precomputed fingerprint file
             hashes = hashes_load(filename)
