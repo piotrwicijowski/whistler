@@ -27,7 +27,7 @@ elif platform == "win32":
 #     FFMPEG_AUDIO_DEVICE = "dsound"
 
 class ContinuousMatcher(object):
-    def __init__(self):
+    def __init__(self, thread):
         self.args = docopt.docopt(audfprint.USAGE, version=audfprint.__version__, argv=['match'] + sys.argv[1:])
         if getattr(sys, 'frozen', False):
             application_path = os.path.dirname(sys.executable)
@@ -38,9 +38,10 @@ class ContinuousMatcher(object):
         self.matcher = audfprint.setup_matcher(self.args)
         self.hash_tab = hash_table.HashTable(self.args['--dbase'])
         self.analyzer = audfprint.setup_analyzer(self.args)
+        self.thread = thread
     def recordAndMatch2(self):
         FFmpegArgs = {'FFMPEG_AUDIO_DEVICE' : FFMPEG_AUDIO_DEVICE, 'FFMPEG_INPUT': FFMPEG_INPUT}
-        return self.matcher.file_match_to_msgs(self.analyzer, self.hash_tab, FFmpegArgs, 0)[0]
+        return self.matcher.file_match_to_msgs(self.analyzer, self.hash_tab, FFmpegArgs, 0, self.thread)[0]
     def recordAndMatch(self):
         recording_file = tempfile.NamedTemporaryFile(suffix='.mp3',delete=False)
         try:

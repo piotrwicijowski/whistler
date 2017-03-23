@@ -301,13 +301,13 @@ class Matcher(object):
             hashesforhashes = self._unique_match_hashes(id, hits, mode)
             return results, hashesforhashes
 
-    def match_file(self, analyzer, ht, filename, number=None):
+    def match_file(self, analyzer, ht, filename, number=None, thread={'interrupted':False}):
         """ Read in an audio file, calculate its landmarks, query against
             hash table.  Return top N matches as (id, filterdmatchcount,
             timeoffs, rawmatchcount), also length of input file in sec,
             and count of raw query hashes extracted
         """
-        q_hashes, metadata = analyzer.wavfile2hashes(filename)
+        q_hashes, metadata = analyzer.wavfile2hashes(filename, thread)
         # Fake durations as largest hash time
         if len(q_hashes) == 0:
             durd = 0.0
@@ -328,16 +328,16 @@ class Matcher(object):
             rslts = rslts[(-rslts[:, 2]).argsort(), :]
         return (rslts[:self.max_returns, :], durd, len(q_hashes), metadata)
 
-    def file_match_to_msgs(self, analyzer, ht, qry, number=None):
+    def file_match_to_msgs(self, analyzer, ht, qry, number=None, thread={'interrupted':False}):
         """ Perform a match on a single input file, return list
             of message strings """
-        rslts, dur, nhash, metadata = self.match_file(analyzer, ht, qry, number)
+        rslts, dur, nhash, metadata = self.match_file(analyzer, ht, qry, number, thread)
         t_hop = analyzer.n_hop/float(analyzer.target_sr)
         if self.verbose:
             qrymsg = qry + (' %.1f '%dur) + "sec " + str(nhash) + " raw hashes"
         else:
-            qrymsg = ''
-            # qrymsg = qry
+            # qrymsg = ''
+            qrymsg = qry
 
         msgrslt = []
         if len(rslts) == 0:
@@ -346,7 +346,8 @@ class Matcher(object):
             if self.verbose:
                 msgrslt.append("NOMATCH "+qrymsg)
             else:
-                msgrslt.append(qrymsg+"\t")
+                # msgrslt.append(qrymsg+"\t")
+                msgrslt.append("NOMATCH")
         else:
             for (tophitid, nhashaligned, aligntime, nhashraw, rank,
                  min_time, max_time) in rslts:

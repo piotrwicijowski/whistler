@@ -36,7 +36,7 @@ elif platform == "win32":
 #     FFMPEG_BIN = "ffmpeg"     # on OSX
 #     FFMPEG_AUDIO_DEVICE = "dsound"
 
-def audio_read(filename, sr=None, channels=None):
+def audio_read(filename, sr=None, channels=None, thread={'interrupted':False}):
     """Read a soundfile, return (d, sr)."""
     # Hacked version of librosa.load and audioread/ff.
     offset = 0.0
@@ -62,6 +62,8 @@ def audio_read(filename, sr=None, channels=None):
             frame = buf_to_float(frame, dtype=dtype)
             num_read_prev = num_read
             num_read += len(frame)
+            if thread['interrupted']:
+                break
             if num_read < s_start:
                 # offset is after the current frame, keep reading.
                 continue
