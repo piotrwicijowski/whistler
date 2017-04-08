@@ -290,8 +290,10 @@ def setup_matcher(args):
     matcher.search_depth = int(args['--search-depth'])
     matcher.sort_by_time = args['--sortbytime']
     matcher.exact_count = args['--exact-count'] | args['--illustrate'] | args['--illustrate-hpf']
-    matcher.illustrate = args['--illustrate'] | args['--illustrate-hpf']
-    matcher.illustrate_hpf = args['--illustrate-hpf']
+    matcher.illustrate = False
+    matcher.illustrate_hpf = False
+    # matcher.illustrate = args['--illustrate'] | args['--illustrate-hpf']
+    # matcher.illustrate_hpf = args['--illustrate-hpf']
     matcher.verbose = args['--verbose']
     matcher.find_time_range = args['--find-time-range']
     matcher.time_quantile = float(args['--time-quantile'])

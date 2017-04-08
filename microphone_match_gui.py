@@ -14,6 +14,7 @@ from PyQt5.QtWidgets import (QApplication,
         QCheckBox,
         QListWidget,
         QListWidgetItem,
+        QLineEdit,
         QProgressBar)
 from PyQt5.QtCore import (QCoreApplication, QThread, QBasicTimer)
 import microphone_match
@@ -65,24 +66,45 @@ class MainWindow(QWidget):
         self.continuousCheckBox.setChecked(self.continuousMatching)
         self.continuousCheckBox.stateChanged.connect(self.toggleContinuous)
 
+        self.FFMpegDeviceLineEdit = QLineEdit()
+        self.FFMpegDeviceLineEdit.setText(self.continuousMatcher.FFMpegDevice)
+        self.FFMpegDeviceLineEdit.textEdited.connect(self.changeFFMpegDevice)
+        self.FFMpegInputLineEdit = QLineEdit()
+        self.FFMpegInputLineEdit.setText(self.continuousMatcher.FFMpegInput)
+        self.FFMpegInputLineEdit.textEdited.connect(self.changeFFMpegInput)
+
         self.progress = 0.0
         self.progressBar = QProgressBar()
         self.progressTimer = QBasicTimer()
 
         self.recentList = []
         self.recentListWidget = QListWidget()
+
+        self.optionsHBox = QHBoxLayout()
+        self.optionsHBox.addWidget(self.continuousCheckBox)
+        self.optionsHBox.addWidget(self.FFMpegDeviceLineEdit)
+        self.optionsHBox.addWidget(self.FFMpegInputLineEdit)
+
         self.recResHBox = QHBoxLayout()
         self.recResHBox.addWidget(self.recordButton)
         self.recResHBox.addWidget(self.resultLabel)
 
         self.mainVBox = QVBoxLayout()
         self.mainVBox.addLayout(self.recResHBox)
-        self.mainVBox.addWidget(self.continuousCheckBox)
+        self.mainVBox.addLayout(self.optionsHBox)
         self.mainVBox.addWidget(self.recentListWidget)
         self.mainVBox.addWidget(self.progressBar)
         # self.mainVBox.addStretch(1)
         self.setLayout(self.mainVBox)
         self.show()
+
+    def changeFFMpegDevice(self, newValue):
+        self.continuousMatcher.FFMpegDevice = newValue
+        print(newValue)
+
+    def changeFFMpegInput(self, newValue):
+        self.continuousMatcher.FFMpegInput = newValue
+        print(newValue)
 
     def interruptRecording(self):
         self.threadInterrupter['interrupted'] = True

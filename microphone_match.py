@@ -11,17 +11,17 @@ import hash_table
 import tempfile
 import subprocess
 import docopt
+import codecs
+from PyQt5.QtCore import QSettings
 
 if platform == "linux" or platform == "linux2":
     FFMPEG_BIN = "ffmpeg"     # on Linux
-    # FFMPEG_AUDIO_DEVICE = "alsa"
-    # FFMPEG_INPUT = "pulse"
     FFMPEG_AUDIO_DEVICE = "pulse"
     FFMPEG_INPUT = "default"
 elif platform == "win32":
     FFMPEG_BIN = "ffmpeg.exe" # on Windows
     FFMPEG_AUDIO_DEVICE = "dshow"
-    FFMPEG_INPUT = u"audio=Mikrofon (Urz\u0105dzenie zgodne ze ".encode('windows-1250')
+    FFMPEG_INPUT = u"audio=Mikrofon (Urz\u0105dzenie zgodne ze "
 # elif platform == "darwin":
 #     FFMPEG_BIN = "ffmpeg"     # on OSX
 #     FFMPEG_AUDIO_DEVICE = "dsound"
@@ -35,20 +35,50 @@ class ContinuousMatcher(object):
             application_path = os.path.dirname(os.path.abspath(__file__))
         if not self.args['--dbase'] :
             self.args['--dbase'] = os.path.join(application_path,'fpdbase.pklz')
+        configPath = os.path.join(application_path,'config.ini')
+
+        # config = SafeConfigParser()
+        if not os.path.isfile(configPath):
+            settings = QSettings(configPath,QSettings.IniFormat)
+            settings.beginGroup('FFMpeg')
+            settings.setValue('bin', FFMPEG_BIN)
+            settings.setValue('device', FFMPEG_AUDIO_DEVICE)
+            settings.setValue('input', '\'' + FFMPEG_INPUT + '\'' )
+            settings.endGroup()
+            del settings
+
+            # config.add_section('FFMpeg')
+            # self.FFMpegBin    = config.set('FFMpeg', 'bin', FFMPEG_BIN)
+            # self.FFMpegDevice = config.set('FFMpeg', 'device', FFMPEG_AUDIO_DEVICE)
+            # self.FFMpegInput  = config.set('FFMpeg', 'input', '\'' + FFMPEG_INPUT + '\'' )
+            # with codecs.open(configPath, 'wb+', encoding='utf-8') as configFile:
+            #     config.write(configFile)
+        # with codecs.open(configPath, 'r', encoding='utf-8') as f:
+        #     config.readfp(f)
+        settings = QSettings(configPath,QSettings.IniFormat)
+        settings.beginGroup('FFMpeg')
+        self.FFMpegBin    = settings.value('bin')
+        self.FFMpegDevice = settings.value('device')
+        self.FFMpegInput  = settings.value('input')
+        self.FFMpegInput  = self.FFMpegInput.strip('\'')
+        print(repr( self.FFMpegInput ))
+        self.FFMpegInput  = self.FFMpegInput.encode('windows-1250')
+        print(repr( self.FFMpegInput ))
+        print(repr(u"audio=Mikrofon (Urz\u0105dzenie zgodne ze ".encode('windows-1250')))
         self.matcher = audfprint.setup_matcher(self.args)
         self.hash_tab = hash_table.HashTable(self.args['--dbase'])
         self.analyzer = audfprint.setup_analyzer(self.args)
         self.thread = thread
     def recordAndMatch2(self):
-        FFmpegArgs = {'FFMPEG_AUDIO_DEVICE' : FFMPEG_AUDIO_DEVICE, 'FFMPEG_INPUT': FFMPEG_INPUT}
+        FFmpegArgs = {'FFMPEG_AUDIO_DEVICE' : self.FFMpegDevice, 'FFMPEG_INPUT': self.FFMpegInput}
         return self.matcher.file_match_to_msgs(self.analyzer, self.hash_tab, FFmpegArgs, 0, self.thread)[0]
     def recordAndMatch(self):
         recording_file = tempfile.NamedTemporaryFile(suffix='.mp3',delete=False)
         try:
             recording_file.close()
-            command = [FFMPEG_BIN,
-                    '-f', FFMPEG_AUDIO_DEVICE,
-                    '-i', FFMPEG_INPUT,
+            command = [self.FFMpegBin,
+                    '-f', self.FFMpegDevice,
+                    '-i', self.FFMpegInput,
                     '-y',
                     '-t', '00:30',
                     recording_file.name]

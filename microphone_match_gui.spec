@@ -5,9 +5,9 @@ block_cipher = None
 
 a = Analysis(['microphone_match_gui.py'],
              pathex=['C:\\Users\\pwici\\Desktop\\audfprint'],
-             binaries=[('ffmpeg.exe','.'),
-             ('fpdbase.pklz','.')],
-             datas=[],
+             binaries=[('ffmpeg.exe','.')
+             ],
+             datas=[('config.ini','.')],
              hiddenimports=[],
              hookspath=['.'],
              runtime_hooks=[],
