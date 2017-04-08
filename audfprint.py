@@ -355,7 +355,7 @@ Options:
   -C, --continue-on-error         Keep processing despite errors reading input
   -l, --list                      Input files are lists, not audio
   -T, --sortbytime                Sort multiple hits per file by time (instead of score)
-  -v <val>, --verbose <val>       Verbosity level [default: 1]
+  -v <val>, --verbose <val>       Verbosity level [default: ]
   -I, --illustrate                Make a plot showing the match
   -J, --illustrate-hpf            Plot the match, using onset enhancement
   -W <dir>, --wavdir <dir>        Find sound files under this dir [default: ]
@@ -429,7 +429,8 @@ def main(argv):
             if analyzer and 'samplerate' in hash_tab.params \
                    and hash_tab.params['samplerate'] != analyzer.target_sr:
                 # analyzer.target_sr = hash_tab.params['samplerate']
-                print("db samplerate overridden to ", analyzer.target_sr)
+                if args['--verbose']:
+                    print("db samplerate overridden to ", analyzer.target_sr)
     else:
         # The command IS precompute
         # dummy empty hash table
@@ -466,10 +467,11 @@ def main(argv):
 
     elapsedtime = time.clock() - initticks
     if analyzer and analyzer.soundfiletotaldur > 0.:
-        print("Processed "
-              + "%d files (%.1f s total dur) in %.1f s sec = %.3f x RT" \
-              % (analyzer.soundfilecount, analyzer.soundfiletotaldur,
-                 elapsedtime, (elapsedtime/analyzer.soundfiletotaldur)))
+        if args['--verbose']:
+            print("Processed "
+                  + "%d files (%.1f s total dur) in %.1f s sec = %.3f x RT" \
+                  % (analyzer.soundfilecount, analyzer.soundfiletotaldur,
+                     elapsedtime, (elapsedtime/analyzer.soundfiletotaldur)))
 
     # Save the hash table file if it has been modified
     if hash_tab and hash_tab.dirty:

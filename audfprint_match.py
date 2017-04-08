@@ -11,7 +11,7 @@ import scipy.signal
 
 import time
 # for checking phys mem size
-import resource
+# import resource
 # for localtest and illustrate
 import audfprint_analyze
 import matplotlib.pyplot as plt
@@ -22,10 +22,11 @@ from scipy import stats
 
 def log(message):
     """ log info with stats """
-    print(time.ctime(), \
-            "physmem=", resource.getrusage(resource.RUSAGE_SELF).ru_maxrss, \
-            "utime=", resource.getrusage(resource.RUSAGE_SELF).ru_utime, \
-            message)
+    print(time.ctime())
+    # print(time.ctime(), \
+    #         "physmem=", resource.getrusage(resource.RUSAGE_SELF).ru_maxrss, \
+    #         "utime=", resource.getrusage(resource.RUSAGE_SELF).ru_utime, \
+    #         message)
 
 def encpowerof2(val):
     """ Return N s.t. 2^N >= val """
@@ -366,7 +367,8 @@ class Matcher(object):
                         nhashaligned, nhashraw, rank)
                     msgrslt.append(msg)
                 else:
-                    msgrslt.append(qrymsg + "\t" + ht.names[tophitid])
+                    msgrslt.append('MATCHED: {artist} - {title}'.format(**ht.metadata[tophitid]))
+                    # msgrslt.append(qrymsg + "\t" + ht.names[tophitid])
                 if self.illustrate:
                     self.illustrate_match(analyzer, ht, qry)
         return msgrslt

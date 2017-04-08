@@ -355,7 +355,7 @@ class Analyzer(object):
                 d, sr, metadata = audio_read.audio_read(filename, sr=self.target_sr, channels=1, thread=thread)
             # except: # audioread.NoBackendError:
             except Exception as e: # audioread.NoBackendError:
-                message = "wavfile2peaks: Error reading " + str(filename) + str(e)
+                message = "wavfile2peaks: Error reading " + str(filename) + " " + str(e)
                 if self.fail_on_error:
                   raise IOError(message)
                 print(message, "skipping")

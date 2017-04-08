@@ -191,8 +191,8 @@ class HashTable(object):
             params = self.load_matlab(name)
         else:
             params = self.load_pkl(name)
-        print("Read fprints for", sum(n is not None for n in self.names), 
-              "files (", sum(self.counts), "hashes) from", name)
+        # print("Read fprints for", sum(n is not None for n in self.names), 
+        #       "files (", sum(self.counts), "hashes) from", name)
         return params
 
     def load_pkl(self, name):
