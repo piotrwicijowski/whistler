@@ -39,7 +39,6 @@ class ContinuousMatcher(object):
             self.args['--dbase'] = os.path.join(application_path,'fpdbase.pklz')
         configPath = os.path.join(application_path,'config.ini')
 
-        # config = SafeConfigParser()
         if not os.path.isfile(configPath):
             settings = QSettings(configPath,QSettings.IniFormat)
             settings.beginGroup('FFMpeg')
@@ -57,20 +56,30 @@ class ContinuousMatcher(object):
             #     config.write(configFile)
         # with codecs.open(configPath, 'r', encoding='utf-8') as f:
         #     config.readfp(f)
-        settings = QSettings(configPath,QSettings.IniFormat)
-        settings.beginGroup('FFMpeg')
-        self.FFMpegBin    = settings.value('bin').encode(os_encoding)
-        self.FFMpegDevice = settings.value('device').encode(os_encoding)
-        self.FFMpegInput  = settings.value('input').encode(os_encoding)
+        self.settings = QSettings(configPath,QSettings.IniFormat)
+        self.settings.beginGroup('FFMpeg')
+        self.FFMpegBin    = self.settings.value('bin')
+        self.FFMpegDevice = self.settings.value('device')
+        self.FFMpegInput  = self.settings.value('input')
         self.FFMpegInput  = self.FFMpegInput.strip('\'')
+        self.settings.endGroup()
         # self.FFMpegInput  = self.FFMpegInput.encode('windows-1250')
         self.matcher = audfprint.setup_matcher(self.args)
         self.hash_tab = hash_table.HashTable(self.args['--dbase'])
         self.analyzer = audfprint.setup_analyzer(self.args)
         self.thread = thread
+
     def recordAndMatch2(self):
-        FFmpegArgs = {'FFMPEG_AUDIO_DEVICE' : self.FFMpegDevice, 'FFMPEG_INPUT': self.FFMpegInput}
+        FFmpegArgs = {'FFMPEG_BIN' : self.FFMpegBin.encode(os_encoding), 'FFMPEG_AUDIO_DEVICE' : self.FFMpegDevice.encode(os_encoding), 'FFMPEG_INPUT': self.FFMpegInput.encode(os_encoding)}
         return self.matcher.file_match_to_msgs(self.analyzer, self.hash_tab, FFmpegArgs, 0, self.thread)[0]
+    
+    def saveSettings(self):
+        self.settings.beginGroup('FFMpeg')
+        self.settings.setValue('bin', self.FFMpegBin)
+        self.settings.setValue('device', self.FFMpegDevice)
+        self.settings.setValue('input', '\'' + self.FFMpegInput + '\'' )
+        self.settings.endGroup()
+
     def recordAndMatch(self):
         recording_file = tempfile.NamedTemporaryFile(suffix='.mp3',delete=False)
         try:

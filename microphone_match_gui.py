@@ -28,6 +28,8 @@ from PyQt5.QtGui import (
         QIcon
         )
 from PyQt5.QtCore import (QCoreApplication, QThread, QBasicTimer)
+import locale
+os_encoding = locale.getpreferredencoding()
 import microphone_match
 
 def main(argv):
@@ -124,6 +126,12 @@ class MainWindow(QMainWindow):
     def openAudioSettings(self, newValue):
         settingsDialog = QDialog(self)
 
+        audioBinLabel = QLabel()
+        audioBinLabel.setText(u'Ścieżka do ffmpeg:')
+        audioBinLineEdit = QLineEdit()
+        audioBinLineEdit.setText(self.continuousMatcher.FFMpegBin)
+        # audioDeviceLineEdit.textEdited.connect(self.changeFFMpegDevice)
+
         audioDeviceLabel = QLabel()
         audioDeviceLabel.setText(u'Urządzenie audio:')
         audioDeviceLineEdit = QLineEdit()
@@ -141,6 +149,7 @@ class MainWindow(QMainWindow):
         dialogButtons.rejected.connect(settingsDialog.reject)
 
         settingsFormLayout = QFormLayout()
+        settingsFormLayout.addRow(audioBinLabel, audioBinLineEdit)
         settingsFormLayout.addRow(audioDeviceLabel, audioDeviceLineEdit)
         settingsFormLayout.addRow(audioInputLabel, audioInputLineEdit)
 
@@ -150,8 +159,14 @@ class MainWindow(QMainWindow):
         settingsDialog.setLayout(settingsLayout)
 
         if settingsDialog.exec_():
-            self.changeFFMpegDevice(audioDeviceLineEdit.text())
-            self.changeFFMpegInput(audioInputLineEdit.text())
+            self.changeFFMpegBin(unicode(audioBinLineEdit.text()))
+            self.changeFFMpegDevice(unicode(audioDeviceLineEdit.text()))
+            self.changeFFMpegInput(unicode(audioInputLineEdit.text()))
+            self.continuousMatcher.saveSettings()
+
+    def changeFFMpegBin(self, newValue):
+        self.continuousMatcher.FFMpegBin = newValue
+        print(newValue)
 
     def changeFFMpegDevice(self, newValue):
         self.continuousMatcher.FFMpegDevice = newValue
