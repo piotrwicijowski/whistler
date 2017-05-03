@@ -22,6 +22,8 @@ from PyQt5.QtWidgets import (
         QAction,
         QProgressBar,
         QDialog,
+        QTableWidget,
+        QTableWidgetItem,
         QDialogButtonBox
         )
 from PyQt5.QtGui import (
@@ -110,6 +112,11 @@ class MainWindow(QMainWindow):
         fileMenu = menubar.addMenu('&Plik')
         settingsMenu = menubar.addMenu('&Ustawienia')
 
+        databaseManagementAction = QAction(QIcon.fromTheme('database'), u'&Baza danych', self)
+        databaseManagementAction.setShortcut('Ctrl+B')
+        databaseManagementAction.setStatusTip(u'Zarządzaj bazą danych')
+        databaseManagementAction.triggered.connect(self.openDatabaseManagement)
+
         exitAction = QAction(QIcon.fromTheme('application-exit'), u'&Wyjście', self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Zamknij program')
@@ -120,8 +127,37 @@ class MainWindow(QMainWindow):
         audioSettingsAction.setStatusTip(u'Zmień ustawienia nagrywania')
         audioSettingsAction.triggered.connect(self.openAudioSettings)
 
+        fileMenu.addAction(databaseManagementAction)
         fileMenu.addAction(exitAction)
         settingsMenu.addAction(audioSettingsAction)
+
+    def openDatabaseManagement(self, newValue):
+        databaseDialog = QDialog(self)
+
+        tableHeaders = [u'Obraz',u'Artysta',u'Tytuł',u'Audio']
+        databaseTable = QTableWidget()
+        databaseTable.setRowCount(len(self.continuousMatcher.hash_tab.metadata))
+        databaseTable.setColumnCount(len(tableHeaders))
+        databaseTable.setHorizontalHeaderLabels(tableHeaders)
+        for i, val in enumerate(self.continuousMatcher.hash_tab.metadata):
+            artistItem = QTableWidgetItem(val["artist"])
+            titleItem = QTableWidgetItem(val["title"])
+            databaseTable.setItem(i,1,artistItem)
+            databaseTable.setItem(i,2,titleItem)
+
+
+        databaseTable.resizeColumnsToContents()
+        databaseTable.resizeRowsToContents()
+
+        dialogButtons = QDialogButtonBox(QDialogButtonBox.Close)
+        dialogButtons.rejected.connect(databaseDialog.accept)
+
+        databaseLayout = QVBoxLayout()
+        databaseLayout.addWidget(databaseTable)
+        databaseLayout.addWidget(dialogButtons)
+        databaseDialog.setLayout(databaseLayout)
+
+        databaseDialog.exec_()
 
     def openAudioSettings(self, newValue):
         settingsDialog = QDialog(self)
@@ -130,19 +166,16 @@ class MainWindow(QMainWindow):
         audioBinLabel.setText(u'Ścieżka do ffmpeg:')
         audioBinLineEdit = QLineEdit()
         audioBinLineEdit.setText(self.continuousMatcher.FFMpegBin)
-        # audioDeviceLineEdit.textEdited.connect(self.changeFFMpegDevice)
 
         audioDeviceLabel = QLabel()
         audioDeviceLabel.setText(u'Urządzenie audio:')
         audioDeviceLineEdit = QLineEdit()
         audioDeviceLineEdit.setText(self.continuousMatcher.FFMpegDevice)
-        # audioDeviceLineEdit.textEdited.connect(self.changeFFMpegDevice)
 
         audioInputLabel = QLabel()
         audioInputLabel.setText(u'Wejście audio:')
         audioInputLineEdit = QLineEdit()
         audioInputLineEdit.setText(self.continuousMatcher.FFMpegInput)
-        # audioInputLineEdit.textEdited.connect(self.changeFFMpegInput)
 
         dialogButtons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         dialogButtons.accepted.connect(settingsDialog.accept)
