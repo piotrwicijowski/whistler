@@ -13,6 +13,8 @@ import subprocess
 import docopt
 import codecs
 from PyQt5.QtCore import QSettings
+import locale
+os_encoding = locale.getpreferredencoding()
 
 if platform == "linux" or platform == "linux2":
     FFMPEG_BIN = "ffmpeg"     # on Linux
@@ -57,14 +59,11 @@ class ContinuousMatcher(object):
         #     config.readfp(f)
         settings = QSettings(configPath,QSettings.IniFormat)
         settings.beginGroup('FFMpeg')
-        self.FFMpegBin    = settings.value('bin')
-        self.FFMpegDevice = settings.value('device')
-        self.FFMpegInput  = settings.value('input')
+        self.FFMpegBin    = settings.value('bin').encode(os_encoding)
+        self.FFMpegDevice = settings.value('device').encode(os_encoding)
+        self.FFMpegInput  = settings.value('input').encode(os_encoding)
         self.FFMpegInput  = self.FFMpegInput.strip('\'')
-        print(repr( self.FFMpegInput ))
-        self.FFMpegInput  = self.FFMpegInput.encode('windows-1250')
-        print(repr( self.FFMpegInput ))
-        print(repr(u"audio=Mikrofon (Urz\u0105dzenie zgodne ze ".encode('windows-1250')))
+        # self.FFMpegInput  = self.FFMpegInput.encode('windows-1250')
         self.matcher = audfprint.setup_matcher(self.args)
         self.hash_tab = hash_table.HashTable(self.args['--dbase'])
         self.analyzer = audfprint.setup_analyzer(self.args)
