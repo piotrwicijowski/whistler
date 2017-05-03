@@ -40,30 +40,11 @@ class ContinuousMatcher(object):
         configPath = os.path.join(application_path,'config.ini')
 
         if not os.path.isfile(configPath):
-            settings = QSettings(configPath,QSettings.IniFormat)
-            settings.beginGroup('FFMpeg')
-            settings.setValue('bin', FFMPEG_BIN)
-            settings.setValue('device', FFMPEG_AUDIO_DEVICE)
-            settings.setValue('input', '\'' + FFMPEG_INPUT + '\'' )
-            settings.endGroup()
-            del settings
+            self.initSetting(configPath)
 
-            # config.add_section('FFMpeg')
-            # self.FFMpegBin    = config.set('FFMpeg', 'bin', FFMPEG_BIN)
-            # self.FFMpegDevice = config.set('FFMpeg', 'device', FFMPEG_AUDIO_DEVICE)
-            # self.FFMpegInput  = config.set('FFMpeg', 'input', '\'' + FFMPEG_INPUT + '\'' )
-            # with codecs.open(configPath, 'wb+', encoding='utf-8') as configFile:
-            #     config.write(configFile)
-        # with codecs.open(configPath, 'r', encoding='utf-8') as f:
-        #     config.readfp(f)
         self.settings = QSettings(configPath,QSettings.IniFormat)
-        self.settings.beginGroup('FFMpeg')
-        self.FFMpegBin    = self.settings.value('bin')
-        self.FFMpegDevice = self.settings.value('device')
-        self.FFMpegInput  = self.settings.value('input')
-        self.FFMpegInput  = self.FFMpegInput.strip('\'')
-        self.settings.endGroup()
-        # self.FFMpegInput  = self.FFMpegInput.encode('windows-1250')
+        self.readSettings()
+
         self.matcher = audfprint.setup_matcher(self.args)
         self.hash_tab = hash_table.HashTable(self.args['--dbase'])
         self.analyzer = audfprint.setup_analyzer(self.args)
@@ -73,6 +54,23 @@ class ContinuousMatcher(object):
         FFmpegArgs = {'FFMPEG_BIN' : self.FFMpegBin.encode(os_encoding), 'FFMPEG_AUDIO_DEVICE' : self.FFMpegDevice.encode(os_encoding), 'FFMPEG_INPUT': self.FFMpegInput.encode(os_encoding)}
         return self.matcher.file_match_to_msgs(self.analyzer, self.hash_tab, FFmpegArgs, 0, self.thread)[0]
     
+    def initSetting(self, configPath):
+        settings = QSettings(configPath,QSettings.IniFormat)
+        settings.beginGroup('FFMpeg')
+        settings.setValue('bin', FFMPEG_BIN)
+        settings.setValue('device', FFMPEG_AUDIO_DEVICE)
+        settings.setValue('input', '\'' + FFMPEG_INPUT + '\'' )
+        settings.endGroup()
+        del settings
+
+    def readSettings(self):
+        self.settings.beginGroup('FFMpeg')
+        self.FFMpegBin    = self.settings.value('bin')
+        self.FFMpegDevice = self.settings.value('device')
+        self.FFMpegInput  = self.settings.value('input')
+        self.FFMpegInput  = self.FFMpegInput.strip('\'')
+        self.settings.endGroup()
+
     def saveSettings(self):
         self.settings.beginGroup('FFMpeg')
         self.settings.setValue('bin', self.FFMpegBin)
