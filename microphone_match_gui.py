@@ -1,21 +1,32 @@
 #!/usr/bin/python2
+# -*- coding: utf-8 -*-
 
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 import sys
 import os
-from PyQt5.QtWidgets import (QApplication,
+from PyQt5.QtWidgets import (
+        QApplication,
         QWidget,
         QPushButton,
         QVBoxLayout,
         QHBoxLayout,
+        QFormLayout,
         QLabel,
         QSizePolicy,
         QCheckBox,
         QListWidget,
         QListWidgetItem,
         QLineEdit,
-        QProgressBar)
+        QMainWindow,
+        QAction,
+        QProgressBar,
+        QDialog,
+        QDialogButtonBox
+        )
+from PyQt5.QtGui import (
+        QIcon
+        )
 from PyQt5.QtCore import (QCoreApplication, QThread, QBasicTimer)
 import microphone_match
 
@@ -38,7 +49,7 @@ class RecorderMatcherThread(QThread):
         # self.recordButton.setText('Record')
         self.result = self.matcher.recordAndMatch2()
 
-class MainWindow(QWidget):
+class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow,self).__init__()
         self.initUI()
@@ -46,8 +57,9 @@ class MainWindow(QWidget):
     def initUI(self):
         self.resize(400,50)
         self.move(400,600)
-        self.setWindowTitle('Swing.azm')
+        self.setWindowTitle('Whistler')
 
+        self.centralWidget = QWidget(self)
         self.continuousMatching = True
         self.threadInterrupter = {'interrupted':False}
         self.continuousMatcher = microphone_match.ContinuousMatcher(self.threadInterrupter)
@@ -61,17 +73,10 @@ class MainWindow(QWidget):
 
         self.resultLabel = QLabel('Ready')
 
-        self.continuousCheckBox = QCheckBox()
-        self.continuousCheckBox.setText('Continuous')
-        self.continuousCheckBox.setChecked(self.continuousMatching)
-        self.continuousCheckBox.stateChanged.connect(self.toggleContinuous)
-
-        self.FFMpegDeviceLineEdit = QLineEdit()
-        self.FFMpegDeviceLineEdit.setText(self.continuousMatcher.FFMpegDevice)
-        self.FFMpegDeviceLineEdit.textEdited.connect(self.changeFFMpegDevice)
-        self.FFMpegInputLineEdit = QLineEdit()
-        self.FFMpegInputLineEdit.setText(self.continuousMatcher.FFMpegInput)
-        self.FFMpegInputLineEdit.textEdited.connect(self.changeFFMpegInput)
+        # self.continuousCheckBox = QCheckBox()
+        # self.continuousCheckBox.setText('Continuous')
+        # self.continuousCheckBox.setChecked(self.continuousMatching)
+        # self.continuousCheckBox.stateChanged.connect(self.toggleContinuous)
 
         self.progress = 0.0
         self.progressBar = QProgressBar()
@@ -81,9 +86,7 @@ class MainWindow(QWidget):
         self.recentListWidget = QListWidget()
 
         self.optionsHBox = QHBoxLayout()
-        self.optionsHBox.addWidget(self.continuousCheckBox)
-        self.optionsHBox.addWidget(self.FFMpegDeviceLineEdit)
-        self.optionsHBox.addWidget(self.FFMpegInputLineEdit)
+        # self.optionsHBox.addWidget(self.continuousCheckBox)
 
         self.recResHBox = QHBoxLayout()
         self.recResHBox.addWidget(self.recordButton)
@@ -95,8 +98,60 @@ class MainWindow(QWidget):
         self.mainVBox.addWidget(self.recentListWidget)
         self.mainVBox.addWidget(self.progressBar)
         # self.mainVBox.addStretch(1)
-        self.setLayout(self.mainVBox)
+        self.centralWidget.setLayout(self.mainVBox)
+        self.setCentralWidget(self.centralWidget)
+        self.setupMenuBar()
         self.show()
+
+    def setupMenuBar(self):
+        menubar = self.menuBar()
+        fileMenu = menubar.addMenu('&Plik')
+        settingsMenu = menubar.addMenu('&Ustawienia')
+
+        exitAction = QAction(QIcon.fromTheme('application-exit'), u'&Wyjście', self)
+        exitAction.setShortcut('Ctrl+Q')
+        exitAction.setStatusTip('Zamknij program')
+        exitAction.triggered.connect(QApplication.quit)
+
+        audioSettingsAction = QAction(QIcon.fromTheme('gnome-settings'), u'Ustawienia &nagrywania', self)
+        audioSettingsAction.setShortcut('Ctrl+Shift+R')
+        audioSettingsAction.setStatusTip(u'Zmień ustawienia nagrywania')
+        audioSettingsAction.triggered.connect(self.openAudioSettings)
+
+        fileMenu.addAction(exitAction)
+        settingsMenu.addAction(audioSettingsAction)
+
+    def openAudioSettings(self, newValue):
+        settingsDialog = QDialog(self)
+
+        audioDeviceLabel = QLabel()
+        audioDeviceLabel.setText(u'Urządzenie audio:')
+        audioDeviceLineEdit = QLineEdit()
+        audioDeviceLineEdit.setText(self.continuousMatcher.FFMpegDevice)
+        # audioDeviceLineEdit.textEdited.connect(self.changeFFMpegDevice)
+
+        audioInputLabel = QLabel()
+        audioInputLabel.setText(u'Wejście audio:')
+        audioInputLineEdit = QLineEdit()
+        audioInputLineEdit.setText(self.continuousMatcher.FFMpegInput)
+        # audioInputLineEdit.textEdited.connect(self.changeFFMpegInput)
+
+        dialogButtons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        dialogButtons.accepted.connect(settingsDialog.accept)
+        dialogButtons.rejected.connect(settingsDialog.reject)
+
+        settingsFormLayout = QFormLayout()
+        settingsFormLayout.addRow(audioDeviceLabel, audioDeviceLineEdit)
+        settingsFormLayout.addRow(audioInputLabel, audioInputLineEdit)
+
+        settingsLayout = QVBoxLayout()
+        settingsLayout.addLayout(settingsFormLayout)
+        settingsLayout.addWidget(dialogButtons)
+        settingsDialog.setLayout(settingsLayout)
+
+        if settingsDialog.exec_():
+            self.changeFFMpegDevice(audioDeviceLineEdit.text())
+            self.changeFFMpegInput(audioInputLineEdit.text())
 
     def changeFFMpegDevice(self, newValue):
         self.continuousMatcher.FFMpegDevice = newValue
