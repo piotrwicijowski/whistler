@@ -127,9 +127,21 @@ class MainWindow(QMainWindow):
         audioSettingsAction.setStatusTip(u'Zmień ustawienia nagrywania')
         audioSettingsAction.triggered.connect(self.openAudioSettings)
 
+        matcherSettingsAction = QAction(QIcon.fromTheme('gnome-settings'), u'Ustawienia &dopasowywania', self)
+        matcherSettingsAction.setShortcut('Ctrl+Shift+M')
+        matcherSettingsAction.setStatusTip(u'Zmień ustawienia dopasowywania')
+        matcherSettingsAction.triggered.connect(self.openMatcherSettings)
+
+        scannerSettingsAction = QAction(QIcon.fromTheme('gnome-settings'), u'Ustawienia &skanowania', self)
+        scannerSettingsAction.setShortcut('Ctrl+Shift+S')
+        scannerSettingsAction.setStatusTip(u'Zmień ustawienia skanowania')
+        scannerSettingsAction.triggered.connect(self.openScannerSettings)
+
         fileMenu.addAction(databaseManagementAction)
         fileMenu.addAction(exitAction)
         settingsMenu.addAction(audioSettingsAction)
+        settingsMenu.addAction(matcherSettingsAction)
+        settingsMenu.addAction(scannerSettingsAction)
 
     def openDatabaseManagement(self, newValue):
         databaseDialog = QDialog(self)
@@ -145,7 +157,6 @@ class MainWindow(QMainWindow):
             databaseTable.setItem(i,1,artistItem)
             databaseTable.setItem(i,2,titleItem)
 
-
         databaseTable.resizeColumnsToContents()
         databaseTable.resizeRowsToContents()
 
@@ -158,6 +169,138 @@ class MainWindow(QMainWindow):
         databaseDialog.setLayout(databaseLayout)
 
         databaseDialog.exec_()
+
+    def openScannerSettings(self, newValue):
+        settingsDialog = QDialog(self)
+
+        densityLabel = QLabel()
+        densityLabel.setText(u'Gęstość znaczników na sekundę')
+        densityLineEdit = QLineEdit()
+        densityLineEdit.setText(str(self.continuousMatcher.args['--density']))
+
+        hashbitsLabel = QLabel()
+        hashbitsLabel.setText(u'Ilość bitów na znacznik')
+        hashbitsLineEdit = QLineEdit()
+        hashbitsLineEdit.setText(str(self.continuousMatcher.args['--hashbits']))
+
+        bucketsizeLabel = QLabel()
+        bucketsizeLabel.setText(u'Rozmiar kubła znaczników')
+        bucketsizeLineEdit = QLineEdit()
+        bucketsizeLineEdit.setText(str(self.continuousMatcher.args['--bucketsize']))
+
+        maxtimeLabel = QLabel()
+        maxtimeLabel.setText(u'Maksymalny zapisany czas')
+        maxtimeLineEdit = QLineEdit()
+        maxtimeLineEdit.setText(str(self.continuousMatcher.args['--maxtime']))
+
+        samplerateLabel = QLabel()
+        samplerateLabel.setText(u'Częstotliwość próbkowania')
+        samplerateLineEdit = QLineEdit()
+        samplerateLineEdit.setText(str(self.continuousMatcher.args['--samplerate']))
+
+        shiftsLabel = QLabel()
+        shiftsLabel.setText(u'Ilość przesunięć przy liczeniu odcisków')
+        shiftsLineEdit = QLineEdit()
+        shiftsLineEdit.setText(str(self.continuousMatcher.args['--shifts']))
+
+        quantileLabel = QLabel()
+        quantileLabel.setText(u'Kwantyl dla extremów')
+        quantileLineEdit = QLineEdit()
+        quantileLineEdit.setText(str(self.continuousMatcher.args['--time-quantile']))
+
+        frequencySDLabel = QLabel()
+        frequencySDLabel.setText(u'Częstotliwość SD')
+        frequencySDLineEdit = QLineEdit()
+        frequencySDLineEdit.setText(str(self.continuousMatcher.args['--freq-sd']))
+
+        fanoutLabel = QLabel()
+        fanoutLabel.setText(u'Maksymalna ilość par znaczników na szczyt')
+        fanoutLineEdit = QLineEdit()
+        fanoutLineEdit.setText(str(self.continuousMatcher.args['--fanout']))
+
+        pksPerFrameLabel = QLabel()
+        pksPerFrameLabel.setText(u'Ilość szczytów na ramkę')
+        pksPerFrameLineEdit = QLineEdit()
+        pksPerFrameLineEdit.setText(str(self.continuousMatcher.args['--pks-per-frame']))
+
+        searchDepthLabel = QLabel()
+        searchDepthLabel.setText(u'Głębokość wyszukiwania')
+        searchDepthLineEdit = QLineEdit()
+        searchDepthLineEdit.setText(str(self.continuousMatcher.args['--search-depth']))
+
+        dialogButtons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        dialogButtons.accepted.connect(settingsDialog.accept)
+        dialogButtons.rejected.connect(settingsDialog.reject)
+
+        settingsFormLayout = QFormLayout()
+        settingsFormLayout.addRow(densityLabel   , densityLineEdit)
+        settingsFormLayout.addRow(hashbitsLabel   , hashbitsLineEdit)
+        settingsFormLayout.addRow(bucketsizeLabel , bucketsizeLineEdit)
+        settingsFormLayout.addRow(maxtimeLabel , maxtimeLineEdit)
+        settingsFormLayout.addRow(samplerateLabel , samplerateLineEdit)
+        settingsFormLayout.addRow(shiftsLabel , shiftsLineEdit)
+        settingsFormLayout.addRow(quantileLabel , quantileLineEdit)
+        settingsFormLayout.addRow(frequencySDLabel , frequencySDLineEdit)
+        settingsFormLayout.addRow(fanoutLabel , fanoutLineEdit)
+        settingsFormLayout.addRow(pksPerFrameLabel , pksPerFrameLineEdit)
+        settingsFormLayout.addRow(searchDepthLabel , searchDepthLineEdit)
+
+        settingsLayout = QVBoxLayout()
+        settingsLayout.addLayout(settingsFormLayout)
+        settingsLayout.addWidget(dialogButtons)
+        settingsDialog.setLayout(settingsLayout)
+
+        if settingsDialog.exec_():
+            self.continuousMatcher.args['--density']       = float(densityLineEdit.text())
+            self.continuousMatcher.args['--hashbits']      = int(hashbitsLineEdit.text())
+            self.continuousMatcher.args['--bucketsize']    = int(bucketsizeLineEdit.text())
+            self.continuousMatcher.args['--maxtime']       = int(maxtimeLineEdit.text())
+            self.continuousMatcher.args['--samplerate']    = int(samplerateLineEdit.text())
+            self.continuousMatcher.args['--shifts']        = int(shiftsLineEdit.text())
+            self.continuousMatcher.args['--time-quantile'] = float(quantileLineEdit.text())
+            self.continuousMatcher.args['--freq-sd']       = float(frequencySDLineEdit.text())
+            self.continuousMatcher.args['--fanout']        = int(fanoutLineEdit.text())
+            self.continuousMatcher.args['--pks-per-frame'] = int(pksPerFrameLineEdit.text())
+            self.continuousMatcher.args['--search-depth']  = int(searchDepthLineEdit.text())
+            self.continuousMatcher.saveSettings()
+
+    def openMatcherSettings(self, newValue):
+        settingsDialog = QDialog(self)
+
+        matchWinLabel = QLabel()
+        matchWinLabel.setText(u'Maksymalne przesunięcie ramek:')
+        matchWinLineEdit = QLineEdit()
+        matchWinLineEdit.setText(str(self.continuousMatcher.args['--match-win']))
+
+        minCountLabel = QLabel()
+        minCountLabel.setText(u'Minimalna liczba trafień:')
+        minCountLineEdit = QLineEdit()
+        minCountLineEdit.setText(str(self.continuousMatcher.args['--min-count']))
+
+        exactCountLabel = QLabel()
+        exactCountLabel.setText(u'Dokładne liczenie trafień:')
+        exactCountCheckBox = QCheckBox()
+        exactCountCheckBox.setChecked(bool(self.continuousMatcher.args['--exact-count']))
+
+        dialogButtons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        dialogButtons.accepted.connect(settingsDialog.accept)
+        dialogButtons.rejected.connect(settingsDialog.reject)
+
+        settingsFormLayout = QFormLayout()
+        settingsFormLayout.addRow(matchWinLabel, matchWinLineEdit)
+        settingsFormLayout.addRow(minCountLabel, minCountLineEdit)
+        settingsFormLayout.addRow(exactCountLabel, exactCountCheckBox)
+
+        settingsLayout = QVBoxLayout()
+        settingsLayout.addLayout(settingsFormLayout)
+        settingsLayout.addWidget(dialogButtons)
+        settingsDialog.setLayout(settingsLayout)
+
+        if settingsDialog.exec_():
+            self.continuousMatcher.args['--match-win'] = int(matchWinLineEdit.text())
+            self.continuousMatcher.args['--min-count'] = int(minCountLineEdit.text())
+            self.continuousMatcher.args['--exact-count'] = exactCountCheckBox.isChecked()
+            self.continuousMatcher.saveSettings()
 
     def openAudioSettings(self, newValue):
         settingsDialog = QDialog(self)
