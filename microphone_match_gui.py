@@ -24,6 +24,7 @@ from PyQt5.QtWidgets import (
         QDialog,
         QTableWidget,
         QTableWidgetItem,
+        QFileDialog,
         QDialogButtonBox
         )
 from PyQt5.QtGui import (
@@ -117,6 +118,11 @@ class MainWindow(QMainWindow):
         databaseManagementAction.setStatusTip(u'Zarządzaj bazą danych')
         databaseManagementAction.triggered.connect(self.openDatabaseManagement)
 
+        chooseDatabaseAction = QAction(QIcon.fromTheme('fileopen'), u'&Otwórz bazę danych', self)
+        chooseDatabaseAction.setShortcut('Ctrl+O')
+        chooseDatabaseAction.setStatusTip('Otwórz katalog zawierający bazę danych')
+        chooseDatabaseAction.triggered.connect(self.chooseDatabaseDirectory)
+
         exitAction = QAction(QIcon.fromTheme('application-exit'), u'&Wyjście', self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Zamknij program')
@@ -137,6 +143,7 @@ class MainWindow(QMainWindow):
         scannerSettingsAction.setStatusTip(u'Zmień ustawienia skanowania')
         scannerSettingsAction.triggered.connect(self.openScannerSettings)
 
+        fileMenu.addAction(chooseDatabaseAction)
         fileMenu.addAction(databaseManagementAction)
         fileMenu.addAction(exitAction)
         settingsMenu.addAction(audioSettingsAction)
@@ -335,22 +342,18 @@ class MainWindow(QMainWindow):
         settingsDialog.setLayout(settingsLayout)
 
         if settingsDialog.exec_():
-            self.changeFFMpegBin(unicode(audioBinLineEdit.text()))
-            self.changeFFMpegDevice(unicode(audioDeviceLineEdit.text()))
-            self.changeFFMpegInput(unicode(audioInputLineEdit.text()))
+            self.continuousMatcher.FFMpegBin = unicode(audioBinLineEdit.text())
+            self.continuousMatcher.FFMpegDevice = unicode(audioDeviceLineEdit.text())
+            self.continuousMatcher.FFMpegInput = unicode(audioInputLineEdit.text())
             self.continuousMatcher.saveSettings()
 
-    def changeFFMpegBin(self, newValue):
-        self.continuousMatcher.FFMpegBin = newValue
-        print(newValue)
-
-    def changeFFMpegDevice(self, newValue):
-        self.continuousMatcher.FFMpegDevice = newValue
-        print(newValue)
-
-    def changeFFMpegInput(self, newValue):
-        self.continuousMatcher.FFMpegInput = newValue
-        print(newValue)
+    def chooseDatabaseDirectory(self):
+        prevDirPath = os.path.join(self.continuousMatcher.applicationPath, self.continuousMatcher.databasePath)
+        prevDirPath = os.path.normpath(prevDirPath)
+        print(prevDirPath)
+        dirPath = QFileDialog.getExistingDirectory(self, u'Wybierz katalog z bazą danych', prevDirPath, QFileDialog.ShowDirsOnly )
+        if dirPath:
+            self.continuousMatcher.openDatabaseDirectory(dirPath)
 
     def interruptRecording(self):
         self.threadInterrupter['interrupted'] = True

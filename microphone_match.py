@@ -32,17 +32,17 @@ class ContinuousMatcher(object):
     def __init__(self, thread):
         self.args = docopt.docopt(audfprint.USAGE, version=audfprint.__version__, argv=['match'] + sys.argv[1:])
         if getattr(sys, 'frozen', False):
-            application_path = os.path.dirname(sys.executable)
+            self.applicationPath = os.path.dirname(sys.executable)
         elif __file__:
-            application_path = os.path.dirname(os.path.abspath(__file__))
+            self.applicationPath = os.path.dirname(os.path.abspath(__file__))
         if not self.args['--dbase'] :
-            self.args['--dbase'] = os.path.join(application_path,'fpdbase.pklz')
-        configPath = os.path.join(application_path,'config.ini')
+            self.args['--dbase'] = os.path.join(self.applicationPath,'fpdbase.pklz')
+        self.configPath = os.path.join(self.applicationPath,'config.ini')
 
-        if not os.path.isfile(configPath):
-            self.initSetting(configPath)
+        if not os.path.isfile(self.configPath):
+            self.initSetting()
 
-        self.settings = QSettings(configPath,QSettings.IniFormat)
+        self.settings = QSettings(self.configPath,QSettings.IniFormat)
         self.readSettings()
 
         self.matcher = audfprint.setup_matcher(self.args)
@@ -50,12 +50,24 @@ class ContinuousMatcher(object):
         self.analyzer = audfprint.setup_analyzer(self.args)
         self.thread = thread
 
+    def openDatabaseDirectory(self, dirPath):
+        self.databasePath = os.path.relpath(dirPath, self.applicationPath)
+        self.settings.beginGroup('database')
+        self.settings.setValue('path', self.databasePath)
+        self.settings.endGroup()
+
     def recordAndMatch2(self):
         FFmpegArgs = {'FFMPEG_BIN' : self.FFMpegBin.encode(os_encoding), 'FFMPEG_AUDIO_DEVICE' : self.FFMpegDevice.encode(os_encoding), 'FFMPEG_INPUT': self.FFMpegInput.encode(os_encoding)}
         return self.matcher.file_match_to_msgs(self.analyzer, self.hash_tab, FFmpegArgs, 0, self.thread)[0]
     
-    def initSetting(self, configPath):
-        settings = QSettings(configPath,QSettings.IniFormat)
+    def initSetting(self):
+        settings = QSettings(self.configPath,QSettings.IniFormat)
+        settings.beginGroup('database')
+        databasePath = os.path.join(self.applicationPath,'..','files')
+        databasePath = os.path.realpath(databasePath)
+        databasePath = os.path.relpath(databasePath, self.applicationPath)
+        settings.setValue('path', databasePath)
+        settings.endGroup()
         settings.beginGroup('FFMpeg')
         settings.setValue('bin', FFMPEG_BIN)
         settings.setValue('device', FFMPEG_AUDIO_DEVICE)
@@ -107,6 +119,9 @@ class ContinuousMatcher(object):
         del settings
 
     def readSettings(self):
+        self.settings.beginGroup('database')
+        self.databasePath = self.settings.value('path')
+        self.settings.endGroup()
         self.settings.beginGroup('FFMpeg')
         self.FFMpegBin    = self.settings.value('bin')
         self.FFMpegDevice = self.settings.value('device')
@@ -158,6 +173,9 @@ class ContinuousMatcher(object):
         self.settings.endGroup()
 
     def saveSettings(self):
+        self.settings.beginGroup('database')
+        self.settings.setValue('path', self.databasePath)
+        self.settings.endGroup()
         self.settings.beginGroup('FFMpeg')
         self.settings.setValue('bin', self.FFMpegBin)
         self.settings.setValue('device', self.FFMpegDevice)
