@@ -86,7 +86,7 @@ def file_precompute_peaks_or_hashes(analyzer, filename, precompdir,
       if hashes_not_peaks:
         type = "hashes"
         saver = audfprint_analyze.hashes_save
-        output, metadata = analyzer.wavfile2hashes(filename)
+        output, metadata = analyzer.wavfile2hashes(filename, {'interrupted':False})
       else:
         type = "peaks"
         saver = audfprint_analyze.peaks_save
@@ -121,7 +121,7 @@ def make_ht_from_list(analyzer, filelist, hashbits, depth, maxtime, pipe=None):
     ht = hash_table.HashTable(hashbits=hashbits, depth=depth, maxtime=maxtime)
     # Add in the files
     for filename in filelist:
-        hashes, metadata = analyzer.wavfile2hashes(filename)
+        hashes, metadata = analyzer.wavfile2hashes(filename, {'interrupted':False})
         ht.store(filename, hashes, metadata)
     # Pass back to caller
     if pipe:

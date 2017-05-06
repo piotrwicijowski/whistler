@@ -418,7 +418,7 @@ class Analyzer(object):
 
     ########### functions to link to actual hash table index database #######
 
-    def ingest(self, hashtable, filename):
+    def ingest(self, hashtable, filename, thread={'interrupted':False}):
         """ Read an audio file and add it to the database
         :params:
           hashtable : HashTable object
@@ -440,7 +440,7 @@ class Analyzer(object):
         #                                                     density=density,
         #                                                     n_fft=n_fft,
         #                                                     n_hop=n_hop)))
-        hashes, metadata = self.wavfile2hashes(filename)
+        hashes, metadata = self.wavfile2hashes(filename, thread)
         hashtable.store(filename, hashes, metadata)
         #return (len(d)/float(sr), len(hashes))
         #return (np.max(hashes, axis=0)[0]*n_hop/float(sr), len(hashes))
@@ -537,7 +537,7 @@ def extract_features(track_obj, *args, **kwargs):
     extract_features_analyzer.n_fft = n_fft
     extract_features_analyzer.n_hop = n_hop
     extract_features_analyzer.target_sr = sr
-    return extract_features_analyzer.wavfile2hashes(track_obj.fn_audio)[0]
+    return extract_features_analyzer.wavfile2hashes(track_obj.fn_audio, {'interrupted':False})[0]
 
 
 # Handy function to build a new hash table from a file glob pattern
