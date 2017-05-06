@@ -30,13 +30,16 @@ elif platform == "win32":
 
 class ContinuousMatcher(object):
     def __init__(self, thread):
-        self.args = docopt.docopt(audfprint.USAGE, version=audfprint.__version__, argv=['match'] + sys.argv[1:])
+        # self.args = docopt.docopt(audfprint.USAGE, version=audfprint.__version__, argv=['match'] + sys.argv[1:])
+        print('a')
+        self.args = docopt.docopt(audfprint.USAGE, version=audfprint.__version__, argv=sys.argv[1:])
+        print('b')
         if getattr(sys, 'frozen', False):
             self.applicationPath = os.path.dirname(sys.executable)
         elif __file__:
             self.applicationPath = os.path.dirname(os.path.abspath(__file__))
-        if not self.args['--dbase'] :
-            self.args['--dbase'] = os.path.join(self.applicationPath,'fpdbase.pklz')
+        # if not self.args['--dbase'] :
+        #     self.args['--dbase'] = os.path.join(self.applicationPath,'fpdbase.pklz')
         self.configPath = os.path.join(self.applicationPath,'config.ini')
 
         if not os.path.isfile(self.configPath):
@@ -46,15 +49,54 @@ class ContinuousMatcher(object):
         self.readSettings()
 
         self.matcher = audfprint.setup_matcher(self.args)
-        self.hash_tab = hash_table.HashTable(self.args['--dbase'])
         self.analyzer = audfprint.setup_analyzer(self.args)
+        self.openDatabaseDirectory()
+        fullFingerprintPath = os.path.join(self.applicationPath, self.databaseDirectoryPath, self.databaseFingerprintFile)
+        self.hash_tab = hash_table.HashTable(fullFingerprintPath)
         self.thread = thread
 
-    def openDatabaseDirectory(self, dirPath):
-        self.databasePath = os.path.relpath(dirPath, self.applicationPath)
+    def scanDirectory(self):
+        fullDatabaseDirectoryPath = os.path.join(self.applicationPath, self.databaseDirectoryPath)
+        if hasattr(self, 'hash_tab') and self.hash_tab:
+            del self.hash_tab
+        self.hash_tab = hash_table.HashTable(
+            hashbits=int(self.args['--hashbits']),
+            depth=int(self.args['--bucketsize']),
+            maxtime=(1 << int(self.args['--maxtimebits'])))
+
+        audioFiles = [os.path.join(self.databaseDirectoryPath, f) for f
+                      in os.listdir(fullDatabaseDirectoryPath)
+                      if os.path.isfile(os.path.join(fullDatabaseDirectoryPath,f))
+                      and os.path.splitext(f)[1]=='.mp3']
+        for filename in audioFiles:
+            self.analyzer.ingest(self.hash_tab, str(filename))
+        if self.hash_tab and self.hash_tab.dirty:
+            fullFingerprintPath = os.path.join(self.applicationPath, self.databaseDirectoryPath, self.databaseFingerprintFile)
+            self.hash_tab.save(fullFingerprintPath)
+
+    def changeDatabaseDirectory(self, dirPath):
+        self.databaseDirectoryPath = os.path.relpath(dirPath, self.applicationPath)
         self.settings.beginGroup('database')
-        self.settings.setValue('path', self.databasePath)
+        self.settings.setValue('directoryPath', self.databaseDirectoryPath)
         self.settings.endGroup()
+
+    def openDatabaseDirectory(self):
+        fullDatabaseDirectoryPath = os.path.join(self.applicationPath, self.databaseDirectoryPath)
+        databaseFiles = [f for f
+                         in os.listdir(fullDatabaseDirectoryPath)
+                         if os.path.isfile(os.path.join(fullDatabaseDirectoryPath,f))
+                         and os.path.splitext(f)[1]=='.pklz']
+        if not databaseFiles:
+            self.settings.beginGroup('database')
+            self.settings.setValue('fingerprintFile', 'fpdbase.pklz')
+            self.databaseFingerprintFile = 'fpdbase.pklz'
+            self.settings.endGroup()
+            self.scanDirectory()
+        elif (self.databaseFingerprintFile not in databaseFiles):
+            self.settings.beginGroup('database')
+            self.settings.setValue('fingerprintFile', databaseFiles[0])
+            self.databaseFingerprintFile = databaseFiles[0]
+            self.settings.endGroup()
 
     def recordAndMatch2(self):
         FFmpegArgs = {'FFMPEG_BIN' : self.FFMpegBin.encode(os_encoding), 'FFMPEG_AUDIO_DEVICE' : self.FFMpegDevice.encode(os_encoding), 'FFMPEG_INPUT': self.FFMpegInput.encode(os_encoding)}
@@ -63,10 +105,11 @@ class ContinuousMatcher(object):
     def initSetting(self):
         settings = QSettings(self.configPath,QSettings.IniFormat)
         settings.beginGroup('database')
-        databasePath = os.path.join(self.applicationPath,'..','files')
-        databasePath = os.path.realpath(databasePath)
-        databasePath = os.path.relpath(databasePath, self.applicationPath)
-        settings.setValue('path', databasePath)
+        databaseDirectoryPath = os.path.join(self.applicationPath,'..','files')
+        databaseDirectoryPath = os.path.realpath(databaseDirectoryPath)
+        databaseDirectoryPath = os.path.relpath(databaseDirectoryPath, self.applicationPath)
+        settings.setValue('directoryPath', databaseDirectoryPath)
+        settings.setValue('fingerprintFile', 'fpdbase.pklz')
         settings.endGroup()
         settings.beginGroup('FFMpeg')
         settings.setValue('bin', FFMPEG_BIN)
@@ -120,7 +163,8 @@ class ContinuousMatcher(object):
 
     def readSettings(self):
         self.settings.beginGroup('database')
-        self.databasePath = self.settings.value('path')
+        self.databaseDirectoryPath = self.settings.value('directoryPath')
+        self.databaseFingerprintFile = self.settings.value('fingerprintFile')
         self.settings.endGroup()
         self.settings.beginGroup('FFMpeg')
         self.FFMpegBin    = self.settings.value('bin')
@@ -145,7 +189,11 @@ class ContinuousMatcher(object):
         self.args['--match-win'        ] = self.settings.value('--match-win'         , type=int   )
         self.args['--max-matches'      ] = self.settings.value('--max-matches'       , type=int   )
         self.args['--maxtime'          ] = self.settings.value('--maxtime'           , type=int   )
-        self.args['--maxtimebits'      ] = self.settings.value('--maxtimebits'       , type=int   )
+        self.args['--maxtimebits'      ] = self.settings.value('--maxtimebits'       )
+        if self.args["--maxtimebits"]:
+            self.args["--maxtimebits"] = int(self.args["--maxtimebits"])
+        else:
+            self.args["--maxtimebits"] = hash_table._bitsfor(int(self.args["--maxtime"]))
         self.args['--min-count'        ] = self.settings.value('--min-count'         , type=int   )
         self.args['--ncores'           ] = self.settings.value('--ncores'            , type=int   )
         self.args['--opfile'           ] = self.settings.value('--opfile'            , type=str   )
@@ -174,7 +222,8 @@ class ContinuousMatcher(object):
 
     def saveSettings(self):
         self.settings.beginGroup('database')
-        self.settings.setValue('path', self.databasePath)
+        self.settings.setValue('directoryPath', self.databaseDirectoryPath)
+        self.settings.setValue('fingerprintFile', self.databaseFingerprintFile)
         self.settings.endGroup()
         self.settings.beginGroup('FFMpeg')
         self.settings.setValue('bin', self.FFMpegBin)

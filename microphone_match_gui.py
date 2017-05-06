@@ -161,8 +161,10 @@ class MainWindow(QMainWindow):
         for i, val in enumerate(self.continuousMatcher.hash_tab.metadata):
             artistItem = QTableWidgetItem(val["artist"])
             titleItem = QTableWidgetItem(val["title"])
+            audioItem = QTableWidgetItem(self.continuousMatcher.hash_tab.names[i])
             databaseTable.setItem(i,1,artistItem)
             databaseTable.setItem(i,2,titleItem)
+            databaseTable.setItem(i,3,audioItem)
 
         databaseTable.resizeColumnsToContents()
         databaseTable.resizeRowsToContents()
@@ -348,12 +350,13 @@ class MainWindow(QMainWindow):
             self.continuousMatcher.saveSettings()
 
     def chooseDatabaseDirectory(self):
-        prevDirPath = os.path.join(self.continuousMatcher.applicationPath, self.continuousMatcher.databasePath)
+        prevDirPath = os.path.join(self.continuousMatcher.applicationPath, self.continuousMatcher.databaseDirectoryPath)
         prevDirPath = os.path.normpath(prevDirPath)
         print(prevDirPath)
         dirPath = QFileDialog.getExistingDirectory(self, u'Wybierz katalog z bazą danych', prevDirPath, QFileDialog.ShowDirsOnly )
         if dirPath:
-            self.continuousMatcher.openDatabaseDirectory(dirPath)
+            self.continuousMatcher.changeDatabaseDirectory(dirPath)
+            self.continuousMatcher.openDatabaseDirectory()
 
     def interruptRecording(self):
         self.threadInterrupter['interrupted'] = True

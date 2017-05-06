@@ -329,6 +329,7 @@ an existing database; "newmerge" combines existing
 databases to create a new one.
 
 Usage: audfprint (new | add | match | precompute | merge | newmerge | list | remove) [options] [<file>]...
+       audfprint [options] [<file>]...
 
 Options:
   -d <dbase>, --dbase <dbase>     Fingerprint database file
