@@ -30,7 +30,10 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import (
         QIcon
         )
-from PyQt5.QtCore import (QCoreApplication, QThread, QBasicTimer)
+from PyQt5.QtCore import (QCoreApplication, QThread, QBasicTimer, QUrl, pyqtProperty, pyqtSlot, pyqtSignal)
+from PyQt5.QtQml import (qmlRegisterType, QQmlComponent, QQmlEngine)
+from PyQt5.QtQuick import (QQuickView)
+from PyQt5.QtQuickWidgets import (QQuickWidget)
 import locale
 os_encoding = locale.getpreferredencoding()
 import microphone_match
@@ -65,7 +68,8 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('Whistler')
 
         self.centralWidget = QWidget(self)
-        self.continuousMatching = True
+        # self.continuousMatching = True
+        self.continuousMatching = False
         self.threadInterrupter = {'interrupted':False}
         self.continuousMatcher = microphone_match.ContinuousMatcher(self.threadInterrupter)
         self.matcherThread = RecorderMatcherThread(self.continuousMatcher)
@@ -113,6 +117,11 @@ class MainWindow(QMainWindow):
         fileMenu = menubar.addMenu('&Plik')
         settingsMenu = menubar.addMenu('&Ustawienia')
 
+        runFullscreenAction = QAction(QIcon.fromTheme('fullscreen'), u'&Pełny ekran', self)
+        runFullscreenAction.setShortcut('F11')
+        runFullscreenAction.setStatusTip(u'Uruchom widok pełnoekranowy')
+        runFullscreenAction.triggered.connect(self.runFullscreen)
+
         databaseManagementAction = QAction(QIcon.fromTheme('database'), u'&Baza danych', self)
         databaseManagementAction.setShortcut('Ctrl+B')
         databaseManagementAction.setStatusTip(u'Zarządzaj bazą danych')
@@ -143,12 +152,29 @@ class MainWindow(QMainWindow):
         scannerSettingsAction.setStatusTip(u'Zmień ustawienia skanowania')
         scannerSettingsAction.triggered.connect(self.openScannerSettings)
 
+        fileMenu.addAction(runFullscreenAction)
         fileMenu.addAction(chooseDatabaseAction)
         fileMenu.addAction(databaseManagementAction)
         fileMenu.addAction(exitAction)
         settingsMenu.addAction(audioSettingsAction)
         settingsMenu.addAction(matcherSettingsAction)
         settingsMenu.addAction(scannerSettingsAction)
+
+    def runFullscreen(self):
+        window = QDialog(self)
+        widget = QQuickWidget()
+        layout = QVBoxLayout(window)
+        layout.addWidget(widget)
+        window.setLayout(layout)
+        widget.setResizeMode(QQuickWidget.SizeRootObjectToView)
+        # view = QQuickView()
+        widget.setSource(QUrl('fullscreen.qml'))
+        # engine = widget.engine()
+        mainRootObject = widget.rootObject()
+        mainRootObject.startRecording.connect(self.recordAndMatch)
+        self.recordingStartedSignal.connect(mainRootObject.stateRecording)
+        self.recordingFinishedSignal.connect(mainRootObject.stateReady)
+        window.show()
 
     def openDatabaseManagement(self, newValue):
         databaseDialog = QDialog(self)
@@ -361,6 +387,7 @@ class MainWindow(QMainWindow):
     def interruptRecording(self):
         self.threadInterrupter['interrupted'] = True
 
+    recordingStartedSignal = pyqtSignal()
     def recordAndMatch(self):
         self.threadInterrupter['interrupted'] = False
         self.recordButton.setText('Recording')
@@ -370,7 +397,9 @@ class MainWindow(QMainWindow):
         self.matcherThread.start()
         self.recordButton.clicked.disconnect()
         self.recordButton.clicked.connect(self.interruptRecording)
+        self.recordingStartedSignal.emit()
 
+    recordingFinishedSignal = pyqtSignal()
     def recordingFinished(self):
         currentResult = self.matcherThread.result
         self.resultLabel.setText(currentResult)
@@ -386,6 +415,7 @@ class MainWindow(QMainWindow):
             self.recordButton.setText('Record')
             self.recordButton.clicked.disconnect()
             self.recordButton.clicked.connect(self.recordAndMatch)
+        self.recordingFinishedSignal.emit()
 
     def timerEvent(self, e):
         if self.progress >= 100:
