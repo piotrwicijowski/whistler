@@ -372,7 +372,10 @@ class Matcher(object):
                         nhashaligned, nhashraw, rank)
                     msgrslt.append(msg)
                 else:
-                    msgrslt.append('MATCHED: {artist} - {title}'.format(**ht.metadata[tophitid]))
+                    try:
+                        msgrslt.append('MATCHED: {artist} - {title}'.format(**ht.metadata[tophitid]))
+                    except:
+                        msgrslt.append('MATCHED: ' + ht.names[tophitid])
                     # msgrslt.append(qrymsg + "\t" + ht.names[tophitid])
                 # if self.illustrate:
                 #     self.illustrate_match(analyzer, ht, qry)
