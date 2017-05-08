@@ -31,9 +31,7 @@ elif platform == "win32":
 class ContinuousMatcher(object):
     def __init__(self, thread):
         # self.args = docopt.docopt(audfprint.USAGE, version=audfprint.__version__, argv=['match'] + sys.argv[1:])
-        print('a')
         self.args = docopt.docopt(audfprint.USAGE, version=audfprint.__version__, argv=sys.argv[1:])
-        print('b')
         if getattr(sys, 'frozen', False):
             self.applicationPath = os.path.dirname(sys.executable)
         elif __file__:
