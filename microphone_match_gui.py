@@ -164,21 +164,31 @@ class MainWindow(QMainWindow):
         settingsMenu.addAction(scannerSettingsAction)
 
     def runFullscreen(self):
-        window = QDialog(self)
-        widget = QQuickWidget()
-        layout = QVBoxLayout(window)
-        layout.setContentsMargins(0,0,0,0)
-        layout.addWidget(widget)
-        window.setLayout(layout)
-        widget.setResizeMode(QQuickWidget.SizeRootObjectToView)
-        # view = QQuickView()
-        widget.setSource(QUrl('fullscreen.qml'))
-        # engine = widget.engine()
-        mainRootObject = widget.rootObject()
-        mainRootObject.startRecording.connect(self.recordAndMatch)
-        self.recordingStartedSignal.connect(mainRootObject.stateRecording)
-        self.recordingFinishedSignal.connect(mainRootObject.stateReady)
-        window.showFullScreen()
+        if self.fullscreenWindow == None:
+            self.fullscreenWindow = QDialog(self)
+            widget = QQuickWidget(self.fullscreenWindow)
+            layout = QVBoxLayout(self.fullscreenWindow)
+            layout.setContentsMargins(0,0,0,0)
+            layout.addWidget(widget)
+            self.fullscreenWindow.setLayout(layout)
+            widget.setResizeMode(QQuickWidget.SizeRootObjectToView)
+            # view = QQuickView()
+            widget.setSource(QUrl('fullscreen.qml'))
+            # engine = widget.engine()
+            mainRootObject = widget.rootObject()
+            mainRootObject.startRecording.connect(self.recordAndMatch)
+            mainRootObject.closeWindow.connect(self.closeFullscreenWindow)
+            self.recordingStartedSignal.connect(mainRootObject.stateRecording)
+            self.recordingFinishedSignal.connect(mainRootObject.stateReady)
+            self.fullscreenWindow.showFullScreen()
+        else:
+            self.fullscreenWindow.show()
+
+    def closeFullscreenWindow(self):
+        if self.fullscreenWindow != None:
+            self.fullscreenWindow.close()
+            del self.fullscreenWindow
+            self.fullscreenWindow = None
 
     def openDatabaseManagement(self, newValue):
         databaseDialog = QDialog(self)
