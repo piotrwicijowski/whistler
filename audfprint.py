@@ -152,7 +152,8 @@ def do_cmd(cmd, analyzer, hash_tab, filename_iter, matcher, outdir, type, report
     elif cmd == 'match':
         # Running query, single-core mode
         for num, filename in enumerate(filename_iter):
-            msgs = matcher.file_match_to_msgs(analyzer, hash_tab, filename, num)
+            results = matcher.file_match_to_msgs(analyzer, hash_tab, filename, num)
+            msgs = map(lambda x: x["msg"], results)
             report(msgs)
 
     elif cmd == 'new' or cmd == 'add':
@@ -221,7 +222,8 @@ def multiproc_add(analyzer, hash_tab, filename_iter, report, ncores):
 
 def matcher_file_match_to_msgs(matcher, analyzer, hash_tab, filename):
     """Cover for matcher.file_match_to_msgs so it can be passed to joblib"""
-    return matcher.file_match_to_msgs(analyzer, hash_tab, filename)
+    results = matcher.file_match_to_msgs(analyzer, hash_tab, filename)
+    return map(lambda x: x["msg"], results)
 
 def do_cmd_multiproc(cmd, analyzer, hash_tab, filename_iter, matcher,
                      outdir, type, report, skip_existing=False, 
