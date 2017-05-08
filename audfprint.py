@@ -336,7 +336,7 @@ Usage: audfprint (new | add | match | precompute | merge | newmerge | list | rem
 Options:
   -d <dbase>, --dbase <dbase>     Fingerprint database file
   -n <dens>, --density <dens>     Target hashes per second [default: 20.0]
-  -h <bits>, --hashbits <bits>    How many bits in each hash [default: 20]
+  -h <bits>, --hashbits <bits>    How many bits in each hash [default: 18]
   -b <val>, --bucketsize <val>    Number of entries per bucket [default: 100]
   -t <val>, --maxtime <val>       Largest time value stored [default: 16384]
   -u <val>, --maxtimebits <val>   maxtime as a number of bits (16384 == 14 bits)
