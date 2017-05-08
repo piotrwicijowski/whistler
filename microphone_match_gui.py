@@ -199,8 +199,8 @@ class MainWindow(QMainWindow):
         databaseTable.setColumnCount(len(tableHeaders))
         databaseTable.setHorizontalHeaderLabels(tableHeaders)
         for i, val in enumerate(self.continuousMatcher.hash_tab.metadata):
-            artistItem = QTableWidgetItem(val["artist"])
-            titleItem = QTableWidgetItem(val["title"])
+            artistItem = QTableWidgetItem(val.get("artist",""))
+            titleItem  = QTableWidgetItem(val.get("title",""))
             audioItem = QTableWidgetItem(self.continuousMatcher.hash_tab.names[i])
             databaseTable.setItem(i,1,artistItem)
             databaseTable.setItem(i,2,titleItem)
