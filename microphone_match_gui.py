@@ -63,6 +63,7 @@ class RecorderMatcherThread(QThread):
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow,self).__init__()
+        self.fullscreenWindow = None
         self.initUI()
 
     def initUI(self):
