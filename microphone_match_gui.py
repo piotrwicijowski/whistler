@@ -38,6 +38,7 @@ import locale
 os_encoding = locale.getpreferredencoding()
 import microphone_match
 import scannerSettingsDialog
+import matcherSettingsDialog
 
 def main(argv):
     app = QApplication(argv)
@@ -212,42 +213,8 @@ class MainWindow(QMainWindow):
         settingsDialog.run()
 
     def openMatcherSettings(self, newValue):
-        settingsDialog = QDialog(self)
-
-        matchWinLabel = QLabel()
-        matchWinLabel.setText(u'Maksymalne przesunięcie ramek:')
-        matchWinLineEdit = QLineEdit()
-        matchWinLineEdit.setText(str(self.continuousMatcher.args['--match-win']))
-
-        minCountLabel = QLabel()
-        minCountLabel.setText(u'Minimalna liczba trafień:')
-        minCountLineEdit = QLineEdit()
-        minCountLineEdit.setText(str(self.continuousMatcher.args['--min-count']))
-
-        exactCountLabel = QLabel()
-        exactCountLabel.setText(u'Dokładne liczenie trafień:')
-        exactCountCheckBox = QCheckBox()
-        exactCountCheckBox.setChecked(bool(self.continuousMatcher.args['--exact-count']))
-
-        dialogButtons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        dialogButtons.accepted.connect(settingsDialog.accept)
-        dialogButtons.rejected.connect(settingsDialog.reject)
-
-        settingsFormLayout = QFormLayout()
-        settingsFormLayout.addRow(matchWinLabel, matchWinLineEdit)
-        settingsFormLayout.addRow(minCountLabel, minCountLineEdit)
-        settingsFormLayout.addRow(exactCountLabel, exactCountCheckBox)
-
-        settingsLayout = QVBoxLayout()
-        settingsLayout.addLayout(settingsFormLayout)
-        settingsLayout.addWidget(dialogButtons)
-        settingsDialog.setLayout(settingsLayout)
-
-        if settingsDialog.exec_():
-            self.continuousMatcher.args['--match-win'] = int(matchWinLineEdit.text())
-            self.continuousMatcher.args['--min-count'] = int(minCountLineEdit.text())
-            self.continuousMatcher.args['--exact-count'] = exactCountCheckBox.isChecked()
-            self.continuousMatcher.saveSettings()
+        settingsDialog = matcherSettingsDialog.MatcherSettingsDialog(self, self.continuousMatcher)
+        settingsDialog.run()
 
     def openAudioSettings(self, newValue):
         settingsDialog = QDialog(self)
