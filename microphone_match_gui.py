@@ -255,7 +255,7 @@ class MainWindow(QMainWindow):
         self.recordButton.clicked.connect(self.interruptRecording)
         self.recordingStartedSignal.emit()
 
-    recordingFinishedSignal = pyqtSignal()
+    recordingFinishedSignal = pyqtSignal(str)
     def recordingFinished(self):
         currentResult = self.matcherThread.result
         self.resultLabel.setText(currentResult)
@@ -271,7 +271,7 @@ class MainWindow(QMainWindow):
             self.recordButton.setText('Record')
             self.recordButton.clicked.disconnect()
             self.recordButton.clicked.connect(self.recordAndMatch)
-        self.recordingFinishedSignal.emit()
+        self.recordingFinishedSignal.emit(currentResult)
 
     def timerEvent(self, e):
         if self.progress >= 100:
