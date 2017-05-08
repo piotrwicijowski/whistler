@@ -37,6 +37,7 @@ from PyQt5.QtQuickWidgets import (QQuickWidget)
 import locale
 os_encoding = locale.getpreferredencoding()
 import microphone_match
+import scannerSettingsDialog
 
 def main(argv):
     app = QApplication(argv)
@@ -164,6 +165,7 @@ class MainWindow(QMainWindow):
         window = QDialog(self)
         widget = QQuickWidget()
         layout = QVBoxLayout(window)
+        layout.setContentsMargins(0,0,0,0)
         layout.addWidget(widget)
         window.setLayout(layout)
         widget.setResizeMode(QQuickWidget.SizeRootObjectToView)
@@ -174,7 +176,7 @@ class MainWindow(QMainWindow):
         mainRootObject.startRecording.connect(self.recordAndMatch)
         self.recordingStartedSignal.connect(mainRootObject.stateRecording)
         self.recordingFinishedSignal.connect(mainRootObject.stateReady)
-        window.show()
+        window.showFullScreen()
 
     def openDatabaseManagement(self, newValue):
         databaseDialog = QDialog(self)
@@ -206,98 +208,8 @@ class MainWindow(QMainWindow):
         databaseDialog.exec_()
 
     def openScannerSettings(self, newValue):
-        settingsDialog = QDialog(self)
-
-        densityLabel = QLabel()
-        densityLabel.setText(u'Gęstość znaczników na sekundę')
-        densityLineEdit = QLineEdit()
-        densityLineEdit.setText(str(self.continuousMatcher.args['--density']))
-
-        hashbitsLabel = QLabel()
-        hashbitsLabel.setText(u'Ilość bitów na znacznik')
-        hashbitsLineEdit = QLineEdit()
-        hashbitsLineEdit.setText(str(self.continuousMatcher.args['--hashbits']))
-
-        bucketsizeLabel = QLabel()
-        bucketsizeLabel.setText(u'Rozmiar kubła znaczników')
-        bucketsizeLineEdit = QLineEdit()
-        bucketsizeLineEdit.setText(str(self.continuousMatcher.args['--bucketsize']))
-
-        maxtimeLabel = QLabel()
-        maxtimeLabel.setText(u'Maksymalny zapisany czas')
-        maxtimeLineEdit = QLineEdit()
-        maxtimeLineEdit.setText(str(self.continuousMatcher.args['--maxtime']))
-
-        samplerateLabel = QLabel()
-        samplerateLabel.setText(u'Częstotliwość próbkowania')
-        samplerateLineEdit = QLineEdit()
-        samplerateLineEdit.setText(str(self.continuousMatcher.args['--samplerate']))
-
-        shiftsLabel = QLabel()
-        shiftsLabel.setText(u'Ilość przesunięć przy liczeniu odcisków')
-        shiftsLineEdit = QLineEdit()
-        shiftsLineEdit.setText(str(self.continuousMatcher.args['--shifts']))
-
-        quantileLabel = QLabel()
-        quantileLabel.setText(u'Kwantyl dla extremów')
-        quantileLineEdit = QLineEdit()
-        quantileLineEdit.setText(str(self.continuousMatcher.args['--time-quantile']))
-
-        frequencySDLabel = QLabel()
-        frequencySDLabel.setText(u'Częstotliwość SD')
-        frequencySDLineEdit = QLineEdit()
-        frequencySDLineEdit.setText(str(self.continuousMatcher.args['--freq-sd']))
-
-        fanoutLabel = QLabel()
-        fanoutLabel.setText(u'Maksymalna ilość par znaczników na szczyt')
-        fanoutLineEdit = QLineEdit()
-        fanoutLineEdit.setText(str(self.continuousMatcher.args['--fanout']))
-
-        pksPerFrameLabel = QLabel()
-        pksPerFrameLabel.setText(u'Ilość szczytów na ramkę')
-        pksPerFrameLineEdit = QLineEdit()
-        pksPerFrameLineEdit.setText(str(self.continuousMatcher.args['--pks-per-frame']))
-
-        searchDepthLabel = QLabel()
-        searchDepthLabel.setText(u'Głębokość wyszukiwania')
-        searchDepthLineEdit = QLineEdit()
-        searchDepthLineEdit.setText(str(self.continuousMatcher.args['--search-depth']))
-
-        dialogButtons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        dialogButtons.accepted.connect(settingsDialog.accept)
-        dialogButtons.rejected.connect(settingsDialog.reject)
-
-        settingsFormLayout = QFormLayout()
-        settingsFormLayout.addRow(densityLabel   , densityLineEdit)
-        settingsFormLayout.addRow(hashbitsLabel   , hashbitsLineEdit)
-        settingsFormLayout.addRow(bucketsizeLabel , bucketsizeLineEdit)
-        settingsFormLayout.addRow(maxtimeLabel , maxtimeLineEdit)
-        settingsFormLayout.addRow(samplerateLabel , samplerateLineEdit)
-        settingsFormLayout.addRow(shiftsLabel , shiftsLineEdit)
-        settingsFormLayout.addRow(quantileLabel , quantileLineEdit)
-        settingsFormLayout.addRow(frequencySDLabel , frequencySDLineEdit)
-        settingsFormLayout.addRow(fanoutLabel , fanoutLineEdit)
-        settingsFormLayout.addRow(pksPerFrameLabel , pksPerFrameLineEdit)
-        settingsFormLayout.addRow(searchDepthLabel , searchDepthLineEdit)
-
-        settingsLayout = QVBoxLayout()
-        settingsLayout.addLayout(settingsFormLayout)
-        settingsLayout.addWidget(dialogButtons)
-        settingsDialog.setLayout(settingsLayout)
-
-        if settingsDialog.exec_():
-            self.continuousMatcher.args['--density']       = float(densityLineEdit.text())
-            self.continuousMatcher.args['--hashbits']      = int(hashbitsLineEdit.text())
-            self.continuousMatcher.args['--bucketsize']    = int(bucketsizeLineEdit.text())
-            self.continuousMatcher.args['--maxtime']       = int(maxtimeLineEdit.text())
-            self.continuousMatcher.args['--samplerate']    = int(samplerateLineEdit.text())
-            self.continuousMatcher.args['--shifts']        = int(shiftsLineEdit.text())
-            self.continuousMatcher.args['--time-quantile'] = float(quantileLineEdit.text())
-            self.continuousMatcher.args['--freq-sd']       = float(frequencySDLineEdit.text())
-            self.continuousMatcher.args['--fanout']        = int(fanoutLineEdit.text())
-            self.continuousMatcher.args['--pks-per-frame'] = int(pksPerFrameLineEdit.text())
-            self.continuousMatcher.args['--search-depth']  = int(searchDepthLineEdit.text())
-            self.continuousMatcher.saveSettings()
+        settingsDialog = scannerSettingsDialog.ScannerSettingsDialog(self, self.continuousMatcher)
+        settingsDialog.run()
 
     def openMatcherSettings(self, newValue):
         settingsDialog = QDialog(self)
