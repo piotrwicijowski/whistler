@@ -278,7 +278,7 @@ class MainWindow(QMainWindow):
         if self.progress >= 100:
             self.progressTimer.stop()
             return
-        self.progress = self.progress + 1/3.0
+        self.progress = self.progress + 10.0 * 1.0/10.0
         self.progressBar.setValue(self.progress)
 
     def toggleContinuous(self):
