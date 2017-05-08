@@ -20,10 +20,25 @@ Rectangle {
 
     Button {
         id: startStopButton
+        width: fullscreenItem.width/8
+        height: fullscreenItem.height/12
         text: qsTr("Start")
         anchors.verticalCenter: startStopSpacer.verticalCenter
         anchors.horizontalCenter: startStopSpacer.horizontalCenter
         isDefault: true
+
+    }
+
+    Shortcut {
+        sequence: "Space"
+        onActivated: startRecording()
+        context: Qt.ApplicationShortcut
+    }
+
+    Shortcut {
+        sequence: "Escape"
+        onActivated: closeWindow()
+        context: Qt.ApplicationShortcut
     }
 
     Connections {
@@ -33,12 +48,15 @@ Rectangle {
 
     signal startRecording()
 
+    signal closeWindow()
+
     function stateRecording(){
         state = "ScanningState"
     }
 
-    function stateReady(){
+    function stateReady(resultString){
         state = "ResultState"
+        resultsText.text = resultString
     }
 
     Item {
@@ -83,34 +101,15 @@ Rectangle {
 
     Button {
         id: button
-        x: 233
-        y: 444
-        text: qsTr("1")
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 0
-        anchors.right: button1.left
-        anchors.rightMargin: 1
+        x: 556
+        width: Math.min(fullscreenItem.width/16,fullscreenItem.height/16)
+        height: width
+        text: qsTr("X")
+        anchors.top: parent.top
+        anchors.topMargin: 0
+        anchors.right: parent.right
+        anchors.rightMargin: 0
         antialiasing: true
-    }
-
-    Button {
-        id: button1
-        x: 318
-        y: 444
-        text: qsTr("2")
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 0
-        anchors.horizontalCenter: parent.horizontalCenter
-    }
-
-    Button {
-        id: button2
-        y: 444
-        text: qsTr("3")
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 0
-        anchors.left: button1.right
-        anchors.leftMargin: 0
     }
 
     Flow {
@@ -118,17 +117,7 @@ Rectangle {
 
     Connections {
         target: button
-        onClicked: { fullscreenItem.state = "" }
-    }
-
-    Connections {
-        target: button1
-        onClicked: { fullscreenItem.state = "ScanningState" }
-    }
-
-    Connections {
-        target: button2
-        onClicked: { fullscreenItem.state = "RestultState" }
+        onClicked: closeWindow()
     }
 
     states: [
