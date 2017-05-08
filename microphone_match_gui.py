@@ -39,6 +39,7 @@ os_encoding = locale.getpreferredencoding()
 import microphone_match
 import scannerSettingsDialog
 import matcherSettingsDialog
+import audioSettingsDialog
 
 def main(argv):
     app = QApplication(argv)
@@ -217,42 +218,8 @@ class MainWindow(QMainWindow):
         settingsDialog.run()
 
     def openAudioSettings(self, newValue):
-        settingsDialog = QDialog(self)
-
-        audioBinLabel = QLabel()
-        audioBinLabel.setText(u'Ścieżka do ffmpeg:')
-        audioBinLineEdit = QLineEdit()
-        audioBinLineEdit.setText(self.continuousMatcher.FFMpegBin)
-
-        audioDeviceLabel = QLabel()
-        audioDeviceLabel.setText(u'Urządzenie audio:')
-        audioDeviceLineEdit = QLineEdit()
-        audioDeviceLineEdit.setText(self.continuousMatcher.FFMpegDevice)
-
-        audioInputLabel = QLabel()
-        audioInputLabel.setText(u'Wejście audio:')
-        audioInputLineEdit = QLineEdit()
-        audioInputLineEdit.setText(self.continuousMatcher.FFMpegInput)
-
-        dialogButtons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        dialogButtons.accepted.connect(settingsDialog.accept)
-        dialogButtons.rejected.connect(settingsDialog.reject)
-
-        settingsFormLayout = QFormLayout()
-        settingsFormLayout.addRow(audioBinLabel, audioBinLineEdit)
-        settingsFormLayout.addRow(audioDeviceLabel, audioDeviceLineEdit)
-        settingsFormLayout.addRow(audioInputLabel, audioInputLineEdit)
-
-        settingsLayout = QVBoxLayout()
-        settingsLayout.addLayout(settingsFormLayout)
-        settingsLayout.addWidget(dialogButtons)
-        settingsDialog.setLayout(settingsLayout)
-
-        if settingsDialog.exec_():
-            self.continuousMatcher.FFMpegBin = unicode(audioBinLineEdit.text())
-            self.continuousMatcher.FFMpegDevice = unicode(audioDeviceLineEdit.text())
-            self.continuousMatcher.FFMpegInput = unicode(audioInputLineEdit.text())
-            self.continuousMatcher.saveSettings()
+        settingsDialog = audioSettingsDialog.AudioSettingDialog(self,self.continuousMatcher)
+        settingsDialog.run()
 
     def chooseDatabaseDirectory(self):
         prevDirPath = os.path.join(self.continuousMatcher.applicationPath, self.continuousMatcher.databaseDirectoryPath)
