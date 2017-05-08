@@ -195,7 +195,7 @@ class FFmpegAudioFile(object):
         metadata_include=['artist','album','title','genre','track']
         if isFilename:
             try:
-                metadata_popen_args = [FFmpegDevice['FFMPEG_BIN'], '-i', filename, '-f', 'ffmetadata', '-']
+                metadata_popen_args = [FFMPEG_BIN, '-i', filename, '-f', 'ffmetadata', '-']
                 metadata_proc =  subprocess.Popen(
                     metadata_popen_args,
                     stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -216,12 +216,12 @@ class FFmpegAudioFile(object):
 
         # procede with reading the audio file
         if isFilename:
-            popen_args = [FFmpegDevice['FFMPEG_BIN'], '-i', filename, '-f', 's16le']
+            popen_args = [FFMPEG_BIN, '-i', filename, '-f', 's16le']
         elif isDevice:
             popen_args = [FFmpegDevice['FFMPEG_BIN'],
                     '-f', FFmpegDevice['FFMPEG_AUDIO_DEVICE'],
                     '-i', FFmpegDevice['FFMPEG_INPUT'],
-                    '-t', '00:30',
+                    '-t', '00:10',
                     '-f', 's16le']
 
         self.channels = channels
