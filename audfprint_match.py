@@ -308,7 +308,12 @@ class Matcher(object):
             timeoffs, rawmatchcount), also length of input file in sec,
             and count of raw query hashes extracted
         """
-        q_hashes, metadata = analyzer.wavfile2hashes(filename, thread)
+        try:
+            q_hashes, metadata = analyzer.wavfile2hashes(filename, thread)
+        except ValueError as e:
+            print(e)
+            q_hashes = []
+            metadata = {}
         # Fake durations as largest hash time
         if len(q_hashes) == 0:
             durd = 0.0
