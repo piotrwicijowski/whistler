@@ -15,7 +15,6 @@ import time
 # for localtest and illustrate
 import audfprint_analyze
 # import matplotlib.pyplot as plt
-import copy
 
 import audio_read
 
@@ -348,19 +347,16 @@ class Matcher(object):
 
         msgrslt = []
         if len(rslts) == 0:
-            result = {"msg": "", "metadata":{}, "filename":""}
             # No matches returned at all
             nhashaligned = 0
             if self.verbose:
-                result["msg"] = "NOMATCH "+qrymsg
+                msgrslt.append("NOMATCH "+qrymsg)
             else:
                 # msgrslt.append(qrymsg+"\t")
-                result["msg"] = "NOMATCH"
-            msgrslt.append(copy.deepcopy(result))
+                msgrslt.append("NOMATCH")
         else:
             for (tophitid, nhashaligned, aligntime, nhashraw, rank,
                  min_time, max_time) in rslts:
-                result = {"msg": "", "metadata":{}, "filename":""}
                 # figure the number of raw and aligned matches for top hit
                 if self.verbose:
                     if self.find_time_range:
@@ -374,19 +370,12 @@ class Matcher(object):
                     msg += (" with {:5d} of {:5d} common hashes"
                             " at rank {:2d}").format(
                         nhashaligned, nhashraw, rank)
-                    result["msg"]      = msg
-                    result["filename"] = ht.names[tophitid]
-                    result["metadata"] = ht.metadata[tophitid]
-                    msgrslt.append(copy.deepcopy(result))
+                    msgrslt.append(msg)
                 else:
                     try:
-                        msg = 'MATCHED: {artist} - {title}'.format(**ht.metadata[tophitid])
+                        msgrslt.append('MATCHED: {artist} - {title}'.format(**ht.metadata[tophitid]))
                     except:
-                        msg = 'MATCHED: ' + ht.names[tophitid]
-                    result["msg"]      = msg
-                    result["filename"] = ht.names[tophitid]
-                    result["metadata"] = ht.metadata[tophitid]
-                    msgrslt.append(copy.deepcopy(result))
+                        msgrslt.append('MATCHED: ' + ht.names[tophitid])
                     # msgrslt.append(qrymsg + "\t" + ht.names[tophitid])
                 # if self.illustrate:
                 #     self.illustrate_match(analyzer, ht, qry)
