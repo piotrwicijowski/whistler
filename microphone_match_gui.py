@@ -26,12 +26,18 @@ from PyQt5.QtWidgets import (
         QTableWidget,
         QTableWidgetItem,
         QFileDialog,
-        QDialogButtonBox
+        QDialogButtonBox,
+        QGraphicsScene,
+        QGraphicsView,
+        QGraphicsPixmapItem
         )
 from PyQt5.QtGui import (
-        QIcon
+        QIcon,
+        QPixmap,
+        QImage,
+        QPalette
         )
-from PyQt5.QtCore import (QCoreApplication, QThread, QBasicTimer, QUrl, pyqtProperty, pyqtSlot, pyqtSignal)
+from PyQt5.QtCore import (QCoreApplication, QThread, QBasicTimer, QUrl, pyqtProperty, pyqtSlot, pyqtSignal, Qt)
 from PyQt5.QtQml import (qmlRegisterType, QQmlComponent, QQmlEngine)
 from PyQt5.QtQuick import (QQuickView)
 from PyQt5.QtQuickWidgets import (QQuickWidget)
@@ -80,7 +86,7 @@ class MainWindow(QMainWindow):
 
         self.recordButton = QPushButton(u'Nagrywaj')
         self.recordButton.resize(self.recordButton.sizeHint())
-        self.recordButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
+        self.recordButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.recordButton.clicked.connect(self.recordAndMatch)
 
         self.resultLabel = QLabel()
@@ -88,6 +94,12 @@ class MainWindow(QMainWindow):
             self.resultLabel.setText(u'Gotowy')
         else:
             self.resultLabel.setText(u'Proszę wybrać katalog z bazą danych')
+
+        self.pictureLabel = QLabel();
+        self.pictureImage = QImage("image.jpg")
+        self.pictureImage = self.pictureImage.scaled(200,200,Qt.IgnoreAspectRatio,Qt.FastTransformation)
+        self.pictureLabel.setAlignment( Qt.AlignRight | Qt.AlignVCenter );
+        self.pictureLabel.setPixmap(QPixmap.fromImage(self.pictureImage))
 
         # self.continuousCheckBox = QCheckBox()
         # self.continuousCheckBox.setText('Continuous')
@@ -107,11 +119,12 @@ class MainWindow(QMainWindow):
         self.recResHBox = QHBoxLayout()
         self.recResHBox.addWidget(self.recordButton)
         self.recResHBox.addWidget(self.resultLabel)
+        self.recResHBox.addWidget(self.pictureLabel)
 
         self.mainVBox = QVBoxLayout()
         self.mainVBox.addLayout(self.recResHBox)
         self.mainVBox.addLayout(self.optionsHBox)
-        self.mainVBox.addWidget(self.recentListWidget)
+        # self.mainVBox.addWidget(self.recentListWidget)
         self.mainVBox.addWidget(self.progressBar)
         # self.mainVBox.addStretch(1)
         self.centralWidget.setLayout(self.mainVBox)
@@ -265,7 +278,15 @@ class MainWindow(QMainWindow):
     recordingFinishedSignal = pyqtSignal(str)
     def recordingFinished(self):
         currentResult = self.resultTextFormatter(self.matcherThread.result)
+        imagePath = os.path.splitext(self.matcherThread.result["filename"])[0] + '.jpg'
+        imagePath = os.path.join(self.continuousMatcher.applicationPath, imagePath)
+        imagePath = os.path.normpath(imagePath)
+        print(imagePath)
         self.resultLabel.setText(currentResult)
+        self.pictureImage = QImage(imagePath)
+        self.pictureImage = self.pictureImage.scaled(200,200,Qt.IgnoreAspectRatio,Qt.FastTransformation)
+        self.pictureLabel.setAlignment( Qt.AlignRight | Qt.AlignVCenter );
+        self.pictureLabel.setPixmap(QPixmap.fromImage(self.pictureImage))
         if(len(self.recentList) == 0 or self.recentList[-1] != currentResult):
             self.recentList.append(currentResult)
             self.recentListWidget.addItem(QListWidgetItem(currentResult))
