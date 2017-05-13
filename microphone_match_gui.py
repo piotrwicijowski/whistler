@@ -235,7 +235,6 @@ class MainWindow(QMainWindow):
     def chooseDatabaseDirectory(self):
         prevDirPath = os.path.join(self.continuousMatcher.applicationPath, self.continuousMatcher.databaseDirectoryPath)
         prevDirPath = os.path.normpath(prevDirPath)
-        print(prevDirPath)
         dirPath = QFileDialog.getExistingDirectory(self, u'Wybierz katalog z bazą danych', prevDirPath, QFileDialog.ShowDirsOnly )
         if dirPath:
             self.continuousMatcher.changeDatabaseDirectory(dirPath)

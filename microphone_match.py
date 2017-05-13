@@ -30,19 +30,15 @@ elif platform == "win32":
 
 class ContinuousMatcher(object):
     def __init__(self, thread):
-        # self.args = docopt.docopt(audfprint.USAGE, version=audfprint.__version__, argv=['match'] + sys.argv[1:])
         self.args = docopt.docopt(audfprint.USAGE, version=audfprint.__version__, argv=sys.argv[1:])
         if getattr(sys, 'frozen', False):
             self.applicationPath = os.path.dirname(sys.executable)
         elif __file__:
             self.applicationPath = os.path.dirname(os.path.abspath(__file__))
-        # if not self.args['--dbase'] :
-        #     self.args['--dbase'] = os.path.join(self.applicationPath,'fpdbase.pklz')
         self.configPath = os.path.join(self.applicationPath,'config.ini')
 
         if not os.path.isfile(self.configPath):
             self.initSetting()
-
         self.settings = QSettings(self.configPath,QSettings.IniFormat)
         self.readSettings()
 
