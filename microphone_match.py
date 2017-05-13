@@ -117,7 +117,7 @@ class ContinuousMatcher(object):
     def recordAndMatch2(self):
         if self.ready:
             FFmpegArgs = {'FFMPEG_BIN' : self.FFMpegBin.encode(os_encoding), 'FFMPEG_AUDIO_DEVICE' : self.FFMpegDevice.encode(os_encoding), 'FFMPEG_INPUT': self.FFMpegInput.encode(os_encoding)}
-            return self.matcher.file_match_to_msgs(self.analyzer, self.hash_tab, FFmpegArgs, 0, self.thread)[0]['filename']
+            return self.matcher.file_match_to_msgs(self.analyzer, self.hash_tab, FFmpegArgs, 0, self.thread)[0]
     
     def initSetting(self):
         settings = QSettings(self.configPath,QSettings.IniFormat)

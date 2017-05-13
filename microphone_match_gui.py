@@ -264,7 +264,7 @@ class MainWindow(QMainWindow):
 
     recordingFinishedSignal = pyqtSignal(str)
     def recordingFinished(self):
-        currentResult = self.matcherThread.result
+        currentResult = self.resultTextFormatter(self.matcherThread.result)
         self.resultLabel.setText(currentResult)
         if(len(self.recentList) == 0 or self.recentList[-1] != currentResult):
             self.recentList.append(currentResult)
@@ -279,6 +279,23 @@ class MainWindow(QMainWindow):
             self.recordButton.clicked.disconnect()
             self.recordButton.clicked.connect(self.recordAndMatch)
         self.recordingFinishedSignal.emit(currentResult)
+
+    def resultTextFormatter(self, result):
+        matchedStringFormat = '{artist} - {title}'
+        formatedResult = ""
+        artist = result['metadata'].get("artist","")
+        title = result['metadata'].get("title","")
+        msg = result['msg']
+        filename = result['filename']
+        if artist and title:
+            formatedResult = matchedStringFormat.format(**{'artist':artist,'title':title})
+        elif filename:
+            formatedResult = filename
+        elif msg:
+            formatedResult = msg
+        else:
+            formatedResult = u'Coś poszło nie tak...'
+        return formatedResult
 
     def timerEvent(self, e):
         if self.progress >= 100:
