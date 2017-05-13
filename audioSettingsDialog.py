@@ -73,4 +73,4 @@ class AudioSettingDialog(QDialog):
             self.continuousMatcher.FFMpegBin = unicode(self.audioBinLineEdit.text())
             self.continuousMatcher.FFMpegDevice = unicode(self.audioDeviceLineEdit.text())
             self.continuousMatcher.FFMpegInput = unicode(self.audioInputLineEdit.text())
-            self.continuousMatcher.saveSettings()
+            self.continuousMatcher.saveFFmpegSettings()

@@ -73,4 +73,4 @@ class MatcherSettingsDialog(QDialog):
             self.continuousMatcher.args['--match-win'] = int(self.matchWinLineEdit.text())
             self.continuousMatcher.args['--min-count'] = int(self.minCountLineEdit.text())
             self.continuousMatcher.args['--exact-count'] = self.exactCountCheckBox.isChecked()
-            self.continuousMatcher.saveSettings()
+            self.continuousMatcher.saveArgsSettings()

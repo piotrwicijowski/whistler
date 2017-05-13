@@ -130,4 +130,4 @@ class ScannerSettingsDialog(QDialog):
             self.continuousMatcher.args['--fanout']        = int   ( self.fanoutLineEdit.text())
             self.continuousMatcher.args['--pks-per-frame'] = int   ( self.pksPerFrameLineEdit.text())
             self.continuousMatcher.args['--search-depth']  = int   ( self.searchDepthLineEdit.text())
-            self.continuousMatcher.saveSettings()
+            self.continuousMatcher.saveArgsSettings()

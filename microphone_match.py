@@ -219,15 +219,24 @@ class ContinuousMatcher(object):
         self.settings.endGroup()
 
     def saveSettings(self):
+        self.saveDatabasePathSettings()
+        self.saveFFMpegSettings()
+        self.saveArgsSettings()
+
+    def saveDatabasePathSettings(self):
         self.settings.beginGroup('database')
         self.settings.setValue('directoryPath', self.databaseDirectoryPath)
         self.settings.setValue('fingerprintFile', self.databaseFingerprintFile)
         self.settings.endGroup()
+
+    def saveFFMpegSettings(self):
         self.settings.beginGroup('FFMpeg')
         self.settings.setValue('bin', self.FFMpegBin)
         self.settings.setValue('device', self.FFMpegDevice)
         self.settings.setValue('input', '\'' + self.FFMpegInput + '\'' )
         self.settings.endGroup()
+
+    def saveArgsSettings(self):
         self.settings.beginGroup('args')
         self.settings.setValue('--bucketsize'        ,self.args['--bucketsize'       ])
         self.settings.setValue('--continue-on-error' ,self.args['--continue-on-error'])
