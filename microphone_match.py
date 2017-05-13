@@ -31,27 +31,43 @@ elif platform == "win32":
 class ContinuousMatcher(object):
     def __init__(self, thread):
         self.args = docopt.docopt(audfprint.USAGE, version=audfprint.__version__, argv=sys.argv[1:])
+        self.matcher = None
+        self.analyzer = None
+        self.hash_tab = None
+        self.ready = False
+        self.setupPaths()
+        self.setupSettings()
+        self.openDatabaseDirectory()
+        self.thread = thread
+
+    def resetAudfprint(self):
+        if self.matcher is not None:
+            del self.matcher
+        if self.analyzer is not None:
+            del self.analyzer
+        if self.hash_tab is not None:
+            del self.hash_tab
+        self.matcher = audfprint.setup_matcher(self.args)
+        self.analyzer = audfprint.setup_analyzer(self.args)
+        self.hash_tab = hash_table.HashTable(self.fullFingerprintPath)
+
+    def setupPaths(self):
         if getattr(sys, 'frozen', False):
             self.applicationPath = os.path.dirname(sys.executable)
         elif __file__:
             self.applicationPath = os.path.dirname(os.path.abspath(__file__))
         self.configPath = os.path.join(self.applicationPath,'config.ini')
 
+    def setupSettings(self):
         if not os.path.isfile(self.configPath):
             self.initSetting()
         self.settings = QSettings(self.configPath,QSettings.IniFormat)
         self.readSettings()
-
-        self.matcher = audfprint.setup_matcher(self.args)
-        self.analyzer = audfprint.setup_analyzer(self.args)
-        self.openDatabaseDirectory()
-        fullFingerprintPath = os.path.join(self.applicationPath, self.databaseDirectoryPath, self.databaseFingerprintFile)
-        self.hash_tab = hash_table.HashTable(fullFingerprintPath)
-        self.thread = thread
+        self.fullFingerprintPath = os.path.join(self.applicationPath, self.databaseDirectoryPath, self.databaseFingerprintFile)
 
     def scanDirectory(self):
         fullDatabaseDirectoryPath = os.path.join(self.applicationPath, self.databaseDirectoryPath)
-        if hasattr(self, 'hash_tab') and self.hash_tab:
+        if self.matcher is not None:
             del self.hash_tab
         self.hash_tab = hash_table.HashTable(
             hashbits=int(self.args['--hashbits']),
@@ -69,6 +85,7 @@ class ContinuousMatcher(object):
             self.hash_tab.save(fullFingerprintPath)
 
     def changeDatabaseDirectory(self, dirPath):
+        self.ready = False
         self.databaseDirectoryPath = os.path.relpath(dirPath, self.applicationPath)
         self.settings.beginGroup('database')
         self.settings.setValue('directoryPath', self.databaseDirectoryPath)
@@ -76,25 +93,32 @@ class ContinuousMatcher(object):
 
     def openDatabaseDirectory(self):
         fullDatabaseDirectoryPath = os.path.join(self.applicationPath, self.databaseDirectoryPath)
+        if not os.path.isdir(fullDatabaseDirectoryPath):
+            return
         databaseFiles = [f for f
                          in os.listdir(fullDatabaseDirectoryPath)
                          if os.path.isfile(os.path.join(fullDatabaseDirectoryPath,f))
                          and os.path.splitext(f)[1]=='.pklz']
         if not databaseFiles:
-            self.settings.beginGroup('database')
-            self.settings.setValue('fingerprintFile', 'fpdbase.pklz')
             self.databaseFingerprintFile = 'fpdbase.pklz'
+            self.settings.beginGroup('database')
+            self.settings.setValue('fingerprintFile', self.databaseFingerprintFile)
             self.settings.endGroup()
             self.scanDirectory()
         elif (self.databaseFingerprintFile not in databaseFiles):
-            self.settings.beginGroup('database')
-            self.settings.setValue('fingerprintFile', databaseFiles[0])
             self.databaseFingerprintFile = databaseFiles[0]
+            self.settings.beginGroup('database')
+            self.settings.setValue('fingerprintFile', self.databaseFingerprintFile)
             self.settings.endGroup()
+        self.fullFingerprintPath = os.path.join(self.applicationPath, self.databaseDirectoryPath, self.databaseFingerprintFile)
+        self.resetAudfprint()
+        self.ready = True
 
     def recordAndMatch2(self):
-        FFmpegArgs = {'FFMPEG_BIN' : self.FFMpegBin.encode(os_encoding), 'FFMPEG_AUDIO_DEVICE' : self.FFMpegDevice.encode(os_encoding), 'FFMPEG_INPUT': self.FFMpegInput.encode(os_encoding)}
-        return self.matcher.file_match_to_msgs(self.analyzer, self.hash_tab, FFmpegArgs, 0, self.thread)[0]
+        if self.ready:
+            print(repr(self.args))
+            FFmpegArgs = {'FFMPEG_BIN' : self.FFMpegBin.encode(os_encoding), 'FFMPEG_AUDIO_DEVICE' : self.FFMpegDevice.encode(os_encoding), 'FFMPEG_INPUT': self.FFMpegInput.encode(os_encoding)}
+            return self.matcher.file_match_to_msgs(self.analyzer, self.hash_tab, FFmpegArgs, 0, self.thread)[0]
     
     def initSetting(self):
         settings = QSettings(self.configPath,QSettings.IniFormat)
@@ -276,6 +300,7 @@ class ContinuousMatcher(object):
         self.settings.setValue('precompute'          ,self.args['precompute'         ])
         self.settings.setValue('remove'              ,self.args['remove'             ])
         self.settings.endGroup()
+        self.resetAudfprint()
 
     def recordAndMatch(self):
         recording_file = tempfile.NamedTemporaryFile(suffix='.mp3',delete=False)

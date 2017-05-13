@@ -5,6 +5,7 @@ import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 import sys
 import os
+import datetime
 from PyQt5.QtWidgets import (
         QApplication,
         QWidget,
@@ -67,8 +68,6 @@ class MainWindow(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        self.resize(400,50)
-        self.move(400,600)
         self.setWindowTitle('Whistler')
 
         self.centralWidget = QWidget(self)
@@ -84,7 +83,11 @@ class MainWindow(QMainWindow):
         self.recordButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
         self.recordButton.clicked.connect(self.recordAndMatch)
 
-        self.resultLabel = QLabel('Ready')
+        self.resultLabel = QLabel()
+        if self.continuousMatcher.ready:
+            self.resultLabel.setText(u'Gotowy')
+        else:
+            self.resultLabel.setText(u'Proszę wybrać katalog z bazą danych')
 
         # self.continuousCheckBox = QCheckBox()
         # self.continuousCheckBox.setText('Continuous')
@@ -239,6 +242,10 @@ class MainWindow(QMainWindow):
         if dirPath:
             self.continuousMatcher.changeDatabaseDirectory(dirPath)
             self.continuousMatcher.openDatabaseDirectory()
+            if self.continuousMatcher.ready:
+                self.resultLabel.setText(u'Gotowy')
+            else:
+                self.resultLabel.setText(u'Proszę wybrać katalog z bazą danych')
 
     def interruptRecording(self):
         self.threadInterrupter['interrupted'] = True
