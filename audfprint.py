@@ -222,7 +222,7 @@ def multiproc_add(analyzer, hash_tab, filename_iter, report, ncores):
 
 def matcher_file_match_to_msgs(matcher, analyzer, hash_tab, filename):
     """Cover for matcher.file_match_to_msgs so it can be passed to joblib"""
-    results = matcher.file_match_to_msgs(analyzer, hash_tab, filename)
+    results = matcher.file_match_to_msgs(analyzer, hash_tab, filename)["filename"]
     return map(lambda x: x["msg"], results)
 
 def do_cmd_multiproc(cmd, analyzer, hash_tab, filename_iter, matcher,
