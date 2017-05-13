@@ -78,7 +78,7 @@ class MainWindow(QMainWindow):
         self.matcherThread = RecorderMatcherThread(self.continuousMatcher)
         self.matcherThread.finished.connect(self.recordingFinished)
 
-        self.recordButton = QPushButton('Record')
+        self.recordButton = QPushButton(u'Nagrywaj')
         self.recordButton.resize(self.recordButton.sizeHint())
         self.recordButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Preferred)
         self.recordButton.clicked.connect(self.recordAndMatch)
@@ -253,7 +253,7 @@ class MainWindow(QMainWindow):
     recordingStartedSignal = pyqtSignal()
     def recordAndMatch(self):
         self.threadInterrupter['interrupted'] = False
-        self.recordButton.setText('Recording')
+        self.recordButton.setText(u'Nagrywanie')
         self.progress = 0.0
         self.progressBar.setValue(0)
         self.progressTimer.start(100,self)
@@ -275,7 +275,7 @@ class MainWindow(QMainWindow):
         if(self.continuousMatching and not self.threadInterrupter['interrupted']):
             self.recordAndMatch()
         else:
-            self.recordButton.setText('Record')
+            self.recordButton.setText(u'Nagrywaj')
             self.recordButton.clicked.disconnect()
             self.recordButton.clicked.connect(self.recordAndMatch)
         self.recordingFinishedSignal.emit(currentResult)
