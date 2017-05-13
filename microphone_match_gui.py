@@ -293,7 +293,6 @@ class MainWindow(QMainWindow):
         imagePath = os.path.splitext(self.matcherThread.result["filename"])[0] + '.jpg'
         imagePath = os.path.join(self.continuousMatcher.applicationPath, imagePath)
         imagePath = os.path.normpath(imagePath)
-        print(imagePath)
         self.resultLabel.setText(currentResult)
         self.pictureImage = QImage(imagePath)
         self.pictureImage = self.pictureImage.scaled(200,200,Qt.IgnoreAspectRatio,Qt.FastTransformation)

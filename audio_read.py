@@ -196,9 +196,16 @@ class FFmpegAudioFile(object):
         if isFilename:
             try:
                 metadata_popen_args = [FFMPEG_BIN, '-i', filename, '-f', 'ffmetadata', '-']
+                # startupinfo = None
+                # if platform == 'win32':
+                #     startupinfo = subprocess.STARTUPINFO()
+                #     startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
                 metadata_proc =  subprocess.Popen(
-                    metadata_popen_args,
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                    metadata_popen_args
+                    , stdout=subprocess.PIPE
+                    #, stderr=subprocess.PIPE
+                    , shell=True
+                    # startupinfo = startupinfo
                     )
                 metadata_proc.wait()
                 for index, line in enumerate( metadata_proc.stdout):
@@ -231,9 +238,16 @@ class FFmpegAudioFile(object):
         if sample_rate:
             popen_args.extend(['-ar', str(sample_rate)])
         popen_args.append('-')
+        # startupinfo = None
+        # if platform == 'win32':
+        #     startupinfo = subprocess.STARTUPINFO()
+        #     startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         self.proc = subprocess.Popen(
-            popen_args,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            popen_args
+            , stdout=subprocess.PIPE
+            , stderr=subprocess.PIPE
+            , shell=True
+            # startupinfo = startupinfo
         )
 
         # Start another thread to consume the standard output of the
