@@ -210,31 +210,43 @@ class MainWindow(QMainWindow):
     def openDatabaseManagement(self, newValue):
         databaseDialog = QDialog(self)
 
-        tableHeaders = [u'Obraz',u'Artysta',u'Tytuł',u'Audio']
         databaseTable = QTableWidget()
-        databaseTable.setRowCount(len(self.continuousMatcher.hash_tab.metadata))
-        databaseTable.setColumnCount(len(tableHeaders))
-        databaseTable.setHorizontalHeaderLabels(tableHeaders)
-        for i, val in enumerate(self.continuousMatcher.hash_tab.metadata):
-            artistItem = QTableWidgetItem(val.get("artist",""))
-            titleItem  = QTableWidgetItem(val.get("title",""))
-            audioItem = QTableWidgetItem(self.continuousMatcher.hash_tab.names[i])
-            databaseTable.setItem(i,1,artistItem)
-            databaseTable.setItem(i,2,titleItem)
-            databaseTable.setItem(i,3,audioItem)
+        self.fillDatabaseManagementTable(databaseTable)
 
-        databaseTable.resizeColumnsToContents()
-        databaseTable.resizeRowsToContents()
+        rescanButton = QPushButton(u'Skanuj ponownie')
+        rescanButton.clicked.connect(lambda: self.rescanDatabaseAndFillTable(databaseTable))
 
         dialogButtons = QDialogButtonBox(QDialogButtonBox.Close)
         dialogButtons.rejected.connect(databaseDialog.accept)
 
         databaseLayout = QVBoxLayout()
         databaseLayout.addWidget(databaseTable)
+        databaseLayout.addWidget(rescanButton)
         databaseLayout.addWidget(dialogButtons)
         databaseDialog.setLayout(databaseLayout)
 
         databaseDialog.exec_()
+
+    def rescanDatabaseAndFillTable(self,table):
+        self.continuousMatcher.scanDirectory()
+        self.fillDatabaseManagementTable(table)
+
+    def fillDatabaseManagementTable(self, table):
+        tableHeaders = [u'Obraz',u'Artysta',u'Tytuł',u'Audio']
+        table.setRowCount(0)
+        table.setRowCount(len(self.continuousMatcher.hash_tab.metadata))
+        table.setColumnCount(len(tableHeaders))
+        table.setHorizontalHeaderLabels(tableHeaders)
+        for i, val in enumerate(self.continuousMatcher.hash_tab.metadata):
+            artistItem = QTableWidgetItem(val.get("artist",""))
+            titleItem  = QTableWidgetItem(val.get("title",""))
+            audioItem = QTableWidgetItem(self.continuousMatcher.hash_tab.names[i])
+            table.setItem(i,1,artistItem)
+            table.setItem(i,2,titleItem)
+            table.setItem(i,3,audioItem)
+
+        table.resizeColumnsToContents()
+        table.resizeRowsToContents()
 
     def openScannerSettings(self, newValue):
         settingsDialog = scannerSettingsDialog.ScannerSettingsDialog(self, self.continuousMatcher)
