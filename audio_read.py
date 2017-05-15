@@ -200,11 +200,15 @@ class FFmpegAudioFile(object):
                 # if platform == 'win32':
                 #     startupinfo = subprocess.STARTUPINFO()
                 #     startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                if platform == "win32":
+                    shell = True
+                else:
+                    shell = False
                 metadata_proc =  subprocess.Popen(
                     metadata_popen_args
                     , stdout=subprocess.PIPE
                     #, stderr=subprocess.PIPE
-                    , shell=True
+                    , shell=shell
                     # startupinfo = startupinfo
                     )
                 metadata_proc.wait()
@@ -242,11 +246,15 @@ class FFmpegAudioFile(object):
         # if platform == 'win32':
         #     startupinfo = subprocess.STARTUPINFO()
         #     startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        if platform == "win32":
+            shell = True
+        else:
+            shell = False
         self.proc = subprocess.Popen(
             popen_args
             , stdout=subprocess.PIPE
             , stderr=subprocess.PIPE
-            , shell=True
+            , shell=shell
             # startupinfo = startupinfo
         )
 

@@ -311,10 +311,14 @@ class ContinuousMatcher(object):
                     '-y',
                     '-t', '00:30',
                     recording_file.name]
+            if platform == "win32":
+                shell = True
+            else:
+                shell = False
             recording_process = subprocess.Popen(command
                     , stdout=subprocess.PIPE
                     , stderr=subprocess.PIPE
-                    , shell=True)
+                    , shell=shell)
             recording_process.communicate()
             recording_process.wait()
             return self.matcher.file_match_to_msgs(self.analyzer, self.hash_tab, recording_file.name, 0)[0]["filename"]
