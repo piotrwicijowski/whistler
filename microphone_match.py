@@ -313,7 +313,7 @@ class ContinuousMatcher(object):
                     recording_file.name]
             recording_process = subprocess.Popen(command
                     , stdout=subprocess.PIPE
-                    , stderr=subprocess.PIPE)
+                    , stderr=subprocess.PIPE
                     , shell=True)
             recording_process.communicate()
             recording_process.wait()
