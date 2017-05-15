@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import (
         QVBoxLayout,
         QHBoxLayout,
         QFormLayout,
+        QStackedWidget,
         QLabel,
         QSizePolicy,
         QCheckBox,
@@ -76,7 +77,9 @@ class MainWindow(QMainWindow):
     def initUI(self):
         self.setWindowTitle('Whistler')
 
-        self.centralWidget = QWidget(self)
+        self.stackedWidget = QStackedWidget(self)
+        self.centralWidget = QWidget(self.stackedWidget)
+        self.stackedWidget.addWidget(self.centralWidget)
         # self.continuousMatching = True
         self.continuousMatching = False
         self.threadInterrupter = {'interrupted':False}
@@ -128,7 +131,9 @@ class MainWindow(QMainWindow):
         self.mainVBox.addWidget(self.progressBar)
         # self.mainVBox.addStretch(1)
         self.centralWidget.setLayout(self.mainVBox)
-        self.setCentralWidget(self.centralWidget)
+        self.setCentralWidget(self.stackedWidget)
+        self.runningInFullscreen = False
+        self.setupFullscreenView()
         self.setupMenuBar()
         self.show()
 
@@ -180,32 +185,34 @@ class MainWindow(QMainWindow):
         settingsMenu.addAction(matcherSettingsAction)
         settingsMenu.addAction(scannerSettingsAction)
 
-    def runFullscreen(self):
-        if self.fullscreenWindow == None:
-            self.fullscreenWindow = QDialog(self)
-            widget = QQuickWidget(self.fullscreenWindow)
-            layout = QVBoxLayout(self.fullscreenWindow)
-            layout.setContentsMargins(0,0,0,0)
-            layout.addWidget(widget)
-            self.fullscreenWindow.setLayout(layout)
-            widget.setResizeMode(QQuickWidget.SizeRootObjectToView)
-            # view = QQuickView()
-            widget.setSource(QUrl(os.path.join(self.continuousMatcher.applicationPath,'fullscreen.qml')))
-            # engine = widget.engine()
-            mainRootObject = widget.rootObject()
+    def setupFullscreenView(self):
+            self.fullscreenWidget = QQuickWidget(self)
+            self.fullscreenWidget.setResizeMode(QQuickWidget.SizeRootObjectToView)
+            self.fullscreenWidget.setSource(QUrl(os.path.join(self.continuousMatcher.applicationPath,'fullscreen.qml')))
+            mainRootObject = self.fullscreenWidget.rootObject()
             mainRootObject.startRecording.connect(self.recordAndMatch)
             mainRootObject.closeWindow.connect(self.closeFullscreenWindow)
             self.recordingStartedSignal.connect(mainRootObject.stateRecording)
             self.recordingFinishedSignal.connect(mainRootObject.stateReady)
-            self.fullscreenWindow.showFullScreen()
+            self.stackedWidget.addWidget(self.fullscreenWidget)
+
+    def runFullscreen(self):
+        if not self.runningInFullscreen:
+            self.runningInFullscreen = True
+            self.stackedWidget.setCurrentIndex(1)
+            self.menuBar().setVisible(False)
+            self.showFullScreen()
         else:
-            self.fullscreenWindow.show()
+            self.runningInFullscreen = False
+            self.stackedWidget.setCurrentIndex(0)
+            self.menuBar().setVisible(True)
+            self.showNormal()
 
     def closeFullscreenWindow(self):
-        if self.fullscreenWindow != None:
-            self.fullscreenWindow.close()
-            del self.fullscreenWindow
-            self.fullscreenWindow = None
+        self.runningInFullscreen = False
+        self.stackedWidget.setCurrentIndex(0)
+        self.menuBar().setVisible(True)
+        self.showNormal()
 
     def openDatabaseManagement(self, newValue):
         databaseDialog = QDialog(self)
