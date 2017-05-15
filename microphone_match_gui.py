@@ -190,7 +190,7 @@ class MainWindow(QMainWindow):
             self.fullscreenWindow.setLayout(layout)
             widget.setResizeMode(QQuickWidget.SizeRootObjectToView)
             # view = QQuickView()
-            widget.setSource(QUrl('fullscreen.qml'))
+            widget.setSource(QUrl(os.path.join(self.continuousMatcher.applicationPath,'fullscreen.qml')))
             # engine = widget.engine()
             mainRootObject = widget.rootObject()
             mainRootObject.startRecording.connect(self.recordAndMatch)
