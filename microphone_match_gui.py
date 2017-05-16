@@ -191,9 +191,11 @@ class MainWindow(QMainWindow):
             self.fullscreenWidget.setSource(QUrl(os.path.join(self.continuousMatcher.applicationPath,'fullscreen.qml')))
             mainRootObject = self.fullscreenWidget.rootObject()
             mainRootObject.startRecording.connect(self.recordAndMatch)
+            mainRootObject.stopRecording.connect(self.interruptRecording)
             mainRootObject.closeWindow.connect(self.closeFullscreenWindow)
             self.recordingStartedSignal.connect(mainRootObject.stateRecording)
             self.recordingFinishedSignal.connect(mainRootObject.stateReady)
+            self.progressChangedSignal.connect(mainRootObject.setProgress)
             self.stackedWidget.addWidget(self.fullscreenWidget)
 
     def runFullscreen(self):
@@ -289,6 +291,7 @@ class MainWindow(QMainWindow):
         self.progress = 0.0
         self.progressBar.setValue(0)
         self.progressTimer.start(100,self)
+        self.progressChangedSignal.emit(self.progress)
         self.matcherThread.start()
         self.recordButton.clicked.disconnect()
         self.recordButton.clicked.connect(self.interruptRecording)
@@ -310,6 +313,7 @@ class MainWindow(QMainWindow):
             self.recentListWidget.addItem(QListWidgetItem(currentResult))
         self.progressBar.setValue(100)
         self.progress = 100.0
+        self.progressChangedSignal.emit(self.progress)
         self.progressTimer.stop()
         if(self.continuousMatching and not self.threadInterrupter['interrupted']):
             self.recordAndMatch()
@@ -336,12 +340,14 @@ class MainWindow(QMainWindow):
             formatedResult = u'Coś poszło nie tak...'
         return formatedResult
 
+    progressChangedSignal = pyqtSignal(float)
     def timerEvent(self, e):
         if self.progress >= 100:
             self.progressTimer.stop()
             return
         self.progress = self.progress + 10.0 * 1.0/10.0
         self.progressBar.setValue(self.progress)
+        self.progressChangedSignal.emit(self.progress)
 
     def toggleContinuous(self):
         self.continuousMatching = self.continuousCheckBox.isChecked()

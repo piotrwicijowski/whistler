@@ -1,5 +1,6 @@
 import QtQuick 2.5
 import QtQuick.Controls 1.4
+import QtQuick.Controls.Styles 1.4
 
 Rectangle {
     id: fullscreenItem
@@ -20,18 +21,130 @@ Rectangle {
 
     Button {
         id: startStopButton
-        width: fullscreenItem.width/8
-        height: fullscreenItem.height/12
+        property real hoverResize : 0
+        property real progress : 0
+        onHoveredChanged: hovered ? state = "hovered" : state = "idle"
+        width: Math.min(fullscreenItem.width/4,fullscreenItem.height/4)
+        height: width
         text: qsTr("Start")
+
+        visible: true
         anchors.verticalCenter: startStopSpacer.verticalCenter
         anchors.horizontalCenter: startStopSpacer.horizontalCenter
         isDefault: true
+        states: [
+            State {
+                name: "hovered"
+                PropertyChanges {
+                    target: startStopButton
+                    hoverResize: 10.0
+                }
+            },
+            State {
+                name: "idle"
+                PropertyChanges {
+                    target: startStopButton
+                    hoverResize: 0.0
+                }
+            }
+        ]
+        transitions: Transition {
 
+            PropertyAnimation {
+                target: startStopButton
+                properties: "hoverResize"
+                duration: 100
+                easing.type: Easing.InOutQuad
+            }
+
+        }
+        style: ButtonStyle {
+            background:
+                Item{
+                id: startStopButtonBackgroundItem
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: startStopButton.width + startStopButton.hoverResize
+                height: startStopButton.height + startStopButton.hoverResize
+                Rectangle {
+                    property real strokeWidth: startStopButton.activeFocus ? 4 : 2
+                    id: startStopButtonCircle
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: parent.width - 2*progressArc.strokeWidth + strokeWidth
+                    height: parent.height - 2*progressArc.strokeWidth + strokeWidth
+                    color: "#00000000"
+                    radius: width*0.5
+                    border.width: strokeWidth
+                    z: 0
+                    border.color: "#e6e6e6"
+                }
+                Canvas {
+                    id: progressArc
+                    anchors.fill: parent
+                    antialiasing: true
+
+                    property color progressColor: "lightblue"
+
+                    property real strokeWidth: 6
+                    property real centerWidth: width / 2
+                    property real centerHeight: height / 2
+                    property real radius: Math.min(centerWidth - strokeWidth, centerHeight - strokeWidth)
+
+                    property real minimumValue: 0
+                    property real maximumValue: 100
+                    property real currentValue: startStopButton.progress
+
+                    // this is the angle that splits the circle in two arcs
+                    // first arc is drawn from 0 radians to angle radians
+                    // second arc is angle radians to 2*PI radians
+                    property real angle: (currentValue - minimumValue) / (maximumValue - minimumValue) * 2 * Math.PI
+
+                    // we want both circle to start / end at 12 o'clock
+                    // without this offset we would start / end at 9 o'clock
+                    property real angleOffset: -Math.PI / 2
+
+                    onProgressColorChanged: requestPaint()
+                    onMinimumValueChanged: requestPaint()
+                    onMaximumValueChanged: requestPaint()
+                    onCurrentValueChanged: requestPaint()
+
+                    onPaint: {
+                        var ctx = getContext("2d");
+                        ctx.save();
+
+                        ctx.clearRect(0, 0, progressArc.width, progressArc.height);
+
+                        ctx.beginPath();
+                        ctx.lineWidth = progressArc.strokeWidth;
+                        ctx.strokeStyle = progressArc.progressColor;
+                        ctx.arc(progressArc.centerWidth,
+                                progressArc.centerHeight,
+                                progressArc.radius,
+                                progressArc.angleOffset,
+                                progressArc.angleOffset + progressArc.angle);
+                        ctx.stroke();
+
+                        ctx.restore();
+                    }
+                }
+            }
+
+            label: Text {
+                renderType: Text.NativeRendering
+                verticalAlignment: Text.AlignVCenter
+                horizontalAlignment: Text.AlignHCenter
+                //              font.family: "Helvetica"
+                font.pointSize: 14
+                color: "#e6e6e6"
+                text: control.text
+            }
+        }
     }
 
     Shortcut {
         sequence: "Space"
-        onActivated: startRecording()
+        onActivated: toggleRecording()
         context: Qt.ApplicationShortcut
     }
 
@@ -43,10 +156,17 @@ Rectangle {
 
     Connections {
         target: startStopButton
-        onClicked: startRecording()
+        onClicked: toggleRecording()
     }
-
+    function toggleRecording(){
+        if(state=="ScanningState")
+            stopRecording()
+        else
+            startRecording()
+    }
     signal startRecording()
+
+    signal stopRecording()
 
     signal closeWindow()
 
@@ -57,6 +177,10 @@ Rectangle {
     function stateReady(resultString){
         state = "ResultState"
         resultsText.text = resultString
+    }
+
+    function setProgress(progress){
+        startStopButton.progress = progress
     }
 
     Item {
@@ -77,7 +201,7 @@ Rectangle {
             height: parent.height*4/5
             opacity: 1
             anchors.leftMargin: (resultsItem.height-resultsImage.height)/2
-//            anchors.leftMargin: (resultsItem.height-resultsImage.height)
+            //            anchors.leftMargin: (resultsItem.height-resultsImage.height)
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             source: "image.jpg"
@@ -154,12 +278,12 @@ Rectangle {
                 target: startStopSpacer
                 anchors.top: resultsItem.bottom
             }
-//            PropertyChanges {
-//                target: resultsImage
-//                anchors.leftMargin: (resultsItem.height-resultsImage.height)/2
-//            }
+            //            PropertyChanges {
+            //                target: resultsImage
+            //                anchors.leftMargin: (resultsItem.height-resultsImage.height)/2
+            //            }
             PropertyChanges {
-                target:startStopButton
+                target: startStopButton
                 text: qsTr("Start")
             }
         }
