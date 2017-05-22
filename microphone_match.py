@@ -79,8 +79,7 @@ class ContinuousMatcher(object):
             hashbits=int(self.args['--hashbits']),
             depth=int(self.args['--bucketsize']),
             maxtime=(1 << int(self.args['--maxtimebits'])))
-
-        audioFiles = [os.path.join(self.databaseDirectoryPath, f) for f
+        audioFiles = [os.path.join(self.applicationPath, self.databaseDirectoryPath, f) for f
                       in os.listdir(fullDatabaseDirectoryPath)
                       if os.path.isfile(os.path.join(fullDatabaseDirectoryPath,f))
                       and os.path.splitext(f)[1]=='.mp3']
