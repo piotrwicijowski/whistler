@@ -230,10 +230,11 @@ class FFmpegAudioFile(object):
             popen_args = [FFMPEG_BIN, '-i', filename, '-f', 's16le']
         elif isDevice:
             popen_args = [FFmpegDevice['FFMPEG_BIN'],
-                    '-f', FFmpegDevice['FFMPEG_AUDIO_DEVICE'],
-                    '-i', FFmpegDevice['FFMPEG_INPUT'],
-                    '-t', '00:10',
-                    '-f', 's16le']
+                    '-f',  FFmpegDevice['FFMPEG_AUDIO_DEVICE'],
+                    '-ac', FFmpegDevice['FFMPEG_INPUT_CHANNELS'],
+                    '-i',  FFmpegDevice['FFMPEG_INPUT'],
+                    '-t',  '00:10',
+                    '-f',  's16le']
 
         self.channels = channels
         self.sample_rate = sample_rate

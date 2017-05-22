@@ -54,14 +54,20 @@ class AudioSettingDialog(QDialog):
         self.audioInputLineEdit = QLineEdit()
         self.audioInputLineEdit.setText(self.continuousMatcher.FFMpegInput)
 
+        self.audioInputChannelsLabel = QLabel()
+        self.audioInputChannelsLabel.setText(u'Ilość kanałów wejścia:')
+        self.audioInputChannelsLineEdit = QLineEdit()
+        self.audioInputChannelsLineEdit.setText(str(self.continuousMatcher.FFMpegInputChannels))
+
         self.dialogButtons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.dialogButtons.accepted.connect(self.accept)
         self.dialogButtons.rejected.connect(self.reject)
 
         self.settingsFormLayout = QFormLayout()
-        self.settingsFormLayout.addRow(self.audioBinLabel    , self.audioBinLineEdit)
-        self.settingsFormLayout.addRow(self.audioDeviceLabel , self.audioDeviceLineEdit)
-        self.settingsFormLayout.addRow(self.audioInputLabel  , self.audioInputLineEdit)
+        self.settingsFormLayout.addRow(self.audioBinLabel,           self.audioBinLineEdit)
+        self.settingsFormLayout.addRow(self.audioDeviceLabel,        self.audioDeviceLineEdit)
+        self.settingsFormLayout.addRow(self.audioInputLabel,         self.audioInputLineEdit)
+        self.settingsFormLayout.addRow(self.audioInputChannelsLabel, self.audioInputChannelsLineEdit)
 
         self.settingsLayout = QVBoxLayout()
         self.settingsLayout.addLayout(self.settingsFormLayout)
@@ -70,7 +76,8 @@ class AudioSettingDialog(QDialog):
 
     def run(self):
         if self.exec_():
-            self.continuousMatcher.FFMpegBin = unicode(self.audioBinLineEdit.text())
-            self.continuousMatcher.FFMpegDevice = unicode(self.audioDeviceLineEdit.text())
-            self.continuousMatcher.FFMpegInput = unicode(self.audioInputLineEdit.text())
+            self.continuousMatcher.FFMpegBin           = unicode(self.audioBinLineEdit.text())
+            self.continuousMatcher.FFMpegDevice        = unicode(self.audioDeviceLineEdit.text())
+            self.continuousMatcher.FFMpegInput         = unicode(self.audioInputLineEdit.text())
+            self.continuousMatcher.FFMpegInputChannels = int(self.audioInputChannelsLineEdit.text())
             self.continuousMatcher.saveFFMpegSettings()

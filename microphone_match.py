@@ -18,12 +18,18 @@ os_encoding = locale.getpreferredencoding()
 
 if platform == "linux" or platform == "linux2":
     FFMPEG_BIN = "ffmpeg"     # on Linux
-    FFMPEG_AUDIO_DEVICE = "pulse"
-    FFMPEG_INPUT = "default"
+    FFMPEG_AUDIO_DEVICE = "alsa"
+    FFMPEG_INPUT = "hw:1,0"
+    FFMPEG_INPUT_CHANNELS = 1
+    # FFMPEG_BIN = "ffmpeg"     # on Linux
+    # FFMPEG_AUDIO_DEVICE = "pulse"
+    # FFMPEG_INPUT = "default"
+    # FFMPEG_INPUT_CHANNELS = 2
 elif platform == "win32":
     FFMPEG_BIN = "ffmpeg.exe" # on Windows
     FFMPEG_AUDIO_DEVICE = "dshow"
     FFMPEG_INPUT = u"audio=Mikrofon (Urz\u0105dzenie zgodne ze "
+    FFMPEG_INPUT_CHANNELS = 1
 # elif platform == "darwin":
 #     FFMPEG_BIN = "ffmpeg"     # on OSX
 #     FFMPEG_AUDIO_DEVICE = "dsound"
@@ -116,7 +122,10 @@ class ContinuousMatcher(object):
 
     def recordAndMatch2(self):
         if self.ready:
-            FFmpegArgs = {'FFMPEG_BIN' : self.FFMpegBin.encode(os_encoding), 'FFMPEG_AUDIO_DEVICE' : self.FFMpegDevice.encode(os_encoding), 'FFMPEG_INPUT': self.FFMpegInput.encode(os_encoding)}
+            FFmpegArgs = {'FFMPEG_BIN'      : self.FFMpegBin.encode(os_encoding),
+                    'FFMPEG_AUDIO_DEVICE'   : self.FFMpegDevice.encode(os_encoding),
+                    'FFMPEG_INPUT'          : self.FFMpegInput.encode(os_encoding),
+                    'FFMPEG_INPUT_CHANNELS' : str(self.FFMpegInputChannels)}
             return self.matcher.file_match_to_msgs(self.analyzer, self.hash_tab, FFmpegArgs, 0, self.thread)[0]
     
     def initSetting(self):
@@ -131,6 +140,7 @@ class ContinuousMatcher(object):
         settings.beginGroup('FFMpeg')
         settings.setValue('bin', FFMPEG_BIN)
         settings.setValue('device', FFMPEG_AUDIO_DEVICE)
+        settings.setValue('inputChannels', FFMPEG_INPUT_CHANNELS)
         settings.setValue('input', '\'' + FFMPEG_INPUT + '\'' )
         settings.endGroup()
         settings.beginGroup('args')
@@ -184,10 +194,11 @@ class ContinuousMatcher(object):
         self.databaseFingerprintFile = self.settings.value('fingerprintFile')
         self.settings.endGroup()
         self.settings.beginGroup('FFMpeg')
-        self.FFMpegBin    = self.settings.value('bin')
-        self.FFMpegDevice = self.settings.value('device')
-        self.FFMpegInput  = self.settings.value('input')
-        self.FFMpegInput  = self.FFMpegInput.strip('\'')
+        self.FFMpegBin           = self.settings.value('bin')
+        self.FFMpegDevice        = self.settings.value('device')
+        self.FFMpegInput         = self.settings.value('input')
+        self.FFMpegInput         = self.FFMpegInput.strip('\'')
+        self.FFMpegInputChannels = self.settings.value('inputChannels', type=int)
         self.settings.endGroup()
         self.settings.beginGroup('args')
         self.args['--bucketsize'       ] = self.settings.value('--bucketsize'        , type=int   )
@@ -252,6 +263,7 @@ class ContinuousMatcher(object):
         self.settings.beginGroup('FFMpeg')
         self.settings.setValue('bin', self.FFMpegBin)
         self.settings.setValue('device', self.FFMpegDevice)
+        self.settings.setValue('inputChannels', self.FFMpegInputChannels)
         self.settings.setValue('input', '\'' + self.FFMpegInput + '\'' )
         self.settings.endGroup()
 
