@@ -4,6 +4,7 @@
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 import sys
+from sys import platform
 import os
 import datetime
 from PyQt5.QtWidgets import (
@@ -38,7 +39,17 @@ from PyQt5.QtGui import (
         QImage,
         QPalette
         )
-from PyQt5.QtCore import (QCoreApplication, QThread, QBasicTimer, QUrl, pyqtProperty, pyqtSlot, pyqtSignal, Qt)
+from PyQt5.QtCore import (
+        QCoreApplication,
+        QThread,
+        QBasicTimer,
+        QUrl,
+        pyqtProperty,
+        pyqtSlot,
+        pyqtSignal,
+        Qt,
+        QT_VERSION_STR
+        )
 from PyQt5.QtQml import (qmlRegisterType, QQmlComponent, QQmlEngine)
 from PyQt5.QtQuick import (QQuickView)
 from PyQt5.QtQuickWidgets import (QQuickWidget)
@@ -48,6 +59,15 @@ import microphone_match
 import scannerSettingsDialog
 import matcherSettingsDialog
 import audioSettingsDialog
+
+major, minor, bugfix = QT_VERSION_STR.split('.')
+major = int(major)
+minor = int(minor)
+bugfix = int(bugfix)
+if platform == "win32" or major<5 or minor<8:
+    enableQmlFullscreen = False
+else:
+    enableQmlFullscreen = True
 
 def main(argv):
     app = QApplication(argv)
@@ -133,7 +153,8 @@ class MainWindow(QMainWindow):
         self.centralWidget.setLayout(self.mainVBox)
         self.setCentralWidget(self.stackedWidget)
         self.runningInFullscreen = False
-        self.setupFullscreenView()
+        if enableQmlFullscreen:
+            self.setupFullscreenView()
         self.setupMenuBar()
         self.show()
 
@@ -142,10 +163,11 @@ class MainWindow(QMainWindow):
         fileMenu = menubar.addMenu('&Plik')
         settingsMenu = menubar.addMenu('&Ustawienia')
 
-        runFullscreenAction = QAction(QIcon.fromTheme('fullscreen'), u'&Pełny ekran', self)
-        runFullscreenAction.setShortcut('F11')
-        runFullscreenAction.setStatusTip(u'Uruchom widok pełnoekranowy')
-        runFullscreenAction.triggered.connect(self.runFullscreen)
+        if enableQmlFullscreen:
+            runFullscreenAction = QAction(QIcon.fromTheme('fullscreen'), u'&Pełny ekran', self)
+            runFullscreenAction.setShortcut('F11')
+            runFullscreenAction.setStatusTip(u'Uruchom widok pełnoekranowy')
+            runFullscreenAction.triggered.connect(self.runFullscreen)
 
         databaseManagementAction = QAction(QIcon.fromTheme('database'), u'&Baza danych', self)
         databaseManagementAction.setShortcut('Ctrl+B')
@@ -177,7 +199,8 @@ class MainWindow(QMainWindow):
         scannerSettingsAction.setStatusTip(u'Zmień ustawienia skanowania')
         scannerSettingsAction.triggered.connect(self.openScannerSettings)
 
-        fileMenu.addAction(runFullscreenAction)
+        if enableQmlFullscreen:
+            fileMenu.addAction(runFullscreenAction)
         fileMenu.addAction(chooseDatabaseAction)
         fileMenu.addAction(databaseManagementAction)
         fileMenu.addAction(exitAction)
@@ -199,22 +222,24 @@ class MainWindow(QMainWindow):
             self.stackedWidget.addWidget(self.fullscreenWidget)
 
     def runFullscreen(self):
-        if not self.runningInFullscreen:
-            self.runningInFullscreen = True
-            self.stackedWidget.setCurrentIndex(1)
-            self.menuBar().setVisible(False)
-            self.showFullScreen()
-        else:
+        if enableQmlFullscreen:
+            if not self.runningInFullscreen:
+                self.runningInFullscreen = True
+                self.stackedWidget.setCurrentIndex(1)
+                self.menuBar().setVisible(False)
+                self.showFullScreen()
+            else:
+                self.runningInFullscreen = False
+                self.stackedWidget.setCurrentIndex(0)
+                self.menuBar().setVisible(True)
+                self.showNormal()
+
+    def closeFullscreenWindow(self):
+        if enableQmlFullscreen:
             self.runningInFullscreen = False
             self.stackedWidget.setCurrentIndex(0)
             self.menuBar().setVisible(True)
             self.showNormal()
-
-    def closeFullscreenWindow(self):
-        self.runningInFullscreen = False
-        self.stackedWidget.setCurrentIndex(0)
-        self.menuBar().setVisible(True)
-        self.showNormal()
 
     def openDatabaseManagement(self, newValue):
         databaseDialog = QDialog(self)
