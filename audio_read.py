@@ -17,10 +17,15 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+from __future__ import print_function
+import sys
 import os
 import numpy as np
 import re
 from sys import platform
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 if platform == "linux" or platform == "linux2":
     FFMPEG_BIN = "ffmpeg"     # on Linux
@@ -195,7 +200,11 @@ class FFmpegAudioFile(object):
         metadata_include=['artist','album','title','genre','track']
         if isFilename:
             try:
-                metadata_popen_args = [FFMPEG_BIN, '-i', filename, '-f', 'ffmetadata', '-']
+                metadata_popen_args = [FFMPEG_BIN,
+                                       '-i',        filename,
+                                       '-f',        'ffmetadata',
+                                       '-loglevel', 'error',
+                                       '-']
                 # startupinfo = None
                 # if platform == 'win32':
                 #     startupinfo = subprocess.STARTUPINFO()
@@ -207,12 +216,16 @@ class FFmpegAudioFile(object):
                 metadata_proc =  subprocess.Popen(
                     metadata_popen_args
                     , stdout=subprocess.PIPE
-                    #, stderr=subprocess.PIPE
+                    , stderr=subprocess.PIPE
                     , shell=shell
                     # startupinfo = startupinfo
                     )
-                metadata_proc.wait()
-                for index, line in enumerate( metadata_proc.stdout):
+                # metadata_proc.wait()
+                stdout, stderr = metadata_proc.communicate()
+                if(stderr):
+                    raise RuntimeError(stderr.splitlines())
+                stdout = stdout.splitlines()
+                for index, line in enumerate(stdout):
                     line = line.decode('utf-8')
                     line = line.rstrip('\n')
                     if(index==0 or line==''):
@@ -223,18 +236,18 @@ class FFmpegAudioFile(object):
                         if(tagname in metadata_include):
                             self.metadata[tagname]=tagvalue
             except Exception as e:
-                print(str(e))
+                eprint('Error reading ffmpeg metadata ' + str(e))
 
         # procede with reading the audio file
         if isFilename:
             popen_args = [FFMPEG_BIN, '-i', filename, '-f', 's16le']
         elif isDevice:
             popen_args = [FFmpegDevice['FFMPEG_BIN'],
-                    '-f',  FFmpegDevice['FFMPEG_AUDIO_DEVICE'],
-                    '-ac', FFmpegDevice['FFMPEG_INPUT_CHANNELS'],
-                    '-i',  FFmpegDevice['FFMPEG_INPUT'],
-                    '-t',  '00:10',
-                    '-f',  's16le']
+                   '-f',  FFmpegDevice['FFMPEG_AUDIO_DEVICE'],
+                   '-ac', FFmpegDevice['FFMPEG_INPUT_CHANNELS'],
+                   '-i',  FFmpegDevice['FFMPEG_INPUT'],
+                   '-t',  '00:10',
+                   '-f',  's16le']
 
         self.channels = channels
         self.sample_rate = sample_rate
