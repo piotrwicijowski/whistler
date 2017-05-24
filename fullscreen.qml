@@ -174,9 +174,10 @@ Rectangle {
         state = "ScanningState"
     }
 
-    function stateReady(resultString){
+    function stateReady(resultString, imagePath){
         state = "ResultState"
         resultsText.text = resultString
+        resultsImage.source = imagePath
     }
 
     function setProgress(progress){

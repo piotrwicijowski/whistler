@@ -153,6 +153,7 @@ class MainWindow(QMainWindow):
         self.centralWidget.setLayout(self.mainVBox)
         self.setCentralWidget(self.stackedWidget)
         self.runningInFullscreen = False
+        self.defaultImagePath = os.path.join(self.continuousMatcher.applicationPath,'default.png')
         if enableQmlFullscreen:
             self.setupFullscreenView()
         self.setupMenuBar()
@@ -322,14 +323,22 @@ class MainWindow(QMainWindow):
         self.recordButton.clicked.connect(self.interruptRecording)
         self.recordingStartedSignal.emit()
 
-    recordingFinishedSignal = pyqtSignal(str)
+    recordingFinishedSignal = pyqtSignal(str, str)
     def recordingFinished(self):
         currentResult = self.resultTextFormatter(self.matcherThread.result)
-        imagePath = os.path.splitext(self.matcherThread.result["filename"])[0] + '.jpg'
-        imagePath = os.path.join(self.continuousMatcher.applicationPath, imagePath)
-        imagePath = os.path.normpath(imagePath)
+        filenameWithoutExtension = os.path.splitext(self.matcherThread.result["filename"])[0]
+        imageExtensions = ['png', 'jpg', 'jpeg', 'bmp']
+        possibleImagePaths = [os.path.normpath(os.path.join(self.continuousMatcher.databaseDirectoryPath, filenameWithoutExtension + "." + ext)) for ext in imageExtensions]
+        imagePaths = [path for path in possibleImagePaths if os.path.exists(path)]
+        # imagePath = os.path.splitext(self.matcherThread.result["filename"])[0] + '.jpg'
+        # imagePath = os.path.join(self.continuousMatcher.databaseDirectoryPath, imagePath)
+        # imagePath = os.path.normpath(imagePath)
+        if len(imagePaths) > 0:
+            resultImagePath = imagePaths[0]
+        else:
+            resultImagePath = self.defaultImagePath
         self.resultLabel.setText(currentResult)
-        self.pictureImage = QImage(imagePath)
+        self.pictureImage = QImage(resultImagePath)
         self.pictureImage = self.pictureImage.scaled(200,200,Qt.IgnoreAspectRatio,Qt.FastTransformation)
         self.pictureLabel.setAlignment( Qt.AlignRight | Qt.AlignVCenter );
         self.pictureLabel.setPixmap(QPixmap.fromImage(self.pictureImage))
@@ -346,7 +355,7 @@ class MainWindow(QMainWindow):
             self.recordButton.setText(u'Nagrywaj')
             self.recordButton.clicked.disconnect()
             self.recordButton.clicked.connect(self.recordAndMatch)
-        self.recordingFinishedSignal.emit(currentResult)
+        self.recordingFinishedSignal.emit(currentResult,resultImagePath)
 
     def resultTextFormatter(self, result):
         matchedStringFormat = '{artist} - {title}'
