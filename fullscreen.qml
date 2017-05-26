@@ -134,7 +134,7 @@ Rectangle {
                 renderType: Text.NativeRendering
                 verticalAlignment: Text.AlignVCenter
                 horizontalAlignment: Text.AlignHCenter
-                //              font.family: "Helvetica"
+                //font.family: "Helvetica"
                 font.pointSize: 14
                 color: "#e6e6e6"
                 text: control.text
@@ -202,7 +202,7 @@ Rectangle {
             height: parent.height*4/5
             opacity: 1
             anchors.leftMargin: (resultsItem.height-resultsImage.height)/2
-            //            anchors.leftMargin: (resultsItem.height-resultsImage.height)
+            //anchors.leftMargin: (resultsItem.height-resultsImage.height)
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             source: "image.jpg"
@@ -225,23 +225,42 @@ Rectangle {
     }
 
     Button {
-        id: button
+        id: closeButton
         x: 556
         width: Math.min(fullscreenItem.width/16,fullscreenItem.height/16)
         height: width
-        text: qsTr("X")
+        text: qsTr("×")
         anchors.top: parent.top
         anchors.topMargin: 0
         anchors.right: parent.right
         anchors.rightMargin: 0
         antialiasing: true
+        style: ButtonStyle {
+            background:
+                Item{
+                id: closeButtonBackgroundItem
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: closeButton.width
+                height: closeButton.height
+            }
+
+            label: Text {
+                renderType: Text.NativeRendering
+                verticalAlignment: Text.AlignVCenter
+                horizontalAlignment: Text.AlignHCenter
+                font.pointSize: 14
+                color: "#e6e6e6"
+                text: control.text
+            }
+        }
     }
 
     Flow {
     }
 
     Connections {
-        target: button
+        target: closeButton
         onClicked: closeWindow()
     }
 
@@ -279,10 +298,10 @@ Rectangle {
                 target: startStopSpacer
                 anchors.top: resultsItem.bottom
             }
-            //            PropertyChanges {
-            //                target: resultsImage
-            //                anchors.leftMargin: (resultsItem.height-resultsImage.height)/2
-            //            }
+            //PropertyChanges {
+            //    target: resultsImage
+            //    anchors.leftMargin: (resultsItem.height-resultsImage.height)/2
+            //}
             PropertyChanges {
                 target: startStopButton
                 text: qsTr("Start")
