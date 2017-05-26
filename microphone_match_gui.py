@@ -326,25 +326,32 @@ class MainWindow(QMainWindow):
     recordingFinishedSignal = pyqtSignal(str, str)
     def recordingFinished(self):
         currentResult = self.resultTextFormatter(self.matcherThread.result)
+
         filenameWithoutExtension = os.path.splitext(self.matcherThread.result["filename"])[0]
         imageExtensions = ['png', 'jpg', 'jpeg', 'bmp']
         possibleImagePaths = [os.path.normpath(os.path.join(self.continuousMatcher.databaseDirectoryPath, filenameWithoutExtension + "." + ext)) for ext in imageExtensions]
         imagePaths = [path for path in possibleImagePaths if os.path.exists(path)]
-        # imagePath = os.path.splitext(self.matcherThread.result["filename"])[0] + '.jpg'
-        # imagePath = os.path.join(self.continuousMatcher.databaseDirectoryPath, imagePath)
-        # imagePath = os.path.normpath(imagePath)
         if len(imagePaths) > 0:
             resultImagePath = imagePaths[0]
         else:
             resultImagePath = self.defaultImagePath
-        self.resultLabel.setText(currentResult)
+
+        textExtensions = ['html', 'txt']
+        possibleTextPaths = [os.path.normpath(os.path.join(self.continuousMatcher.databaseDirectoryPath, filenameWithoutExtension + "." + ext)) for ext in textExtensions]
+        textPaths = [path for path in possibleTextPaths if os.path.exists(path)]
+        if len(textPaths) > 0:
+            resultText = self.parseResultTextFile(textPaths[0])
+        else:
+            resultText = currentResult
+
+        self.resultLabel.setText(resultText)
         self.pictureImage = QImage(resultImagePath)
         self.pictureImage = self.pictureImage.scaled(200,200,Qt.IgnoreAspectRatio,Qt.FastTransformation)
         self.pictureLabel.setAlignment( Qt.AlignRight | Qt.AlignVCenter );
         self.pictureLabel.setPixmap(QPixmap.fromImage(self.pictureImage))
-        if(len(self.recentList) == 0 or self.recentList[-1] != currentResult):
-            self.recentList.append(currentResult)
-            self.recentListWidget.addItem(QListWidgetItem(currentResult))
+        if(len(self.recentList) == 0 or self.recentList[-1] != resultText):
+            self.recentList.append(resultText)
+            self.recentListWidget.addItem(QListWidgetItem(resultText))
         self.progressBar.setValue(100)
         self.progress = 100.0
         self.progressChangedSignal.emit(self.progress)
@@ -355,7 +362,12 @@ class MainWindow(QMainWindow):
             self.recordButton.setText(u'Nagrywaj')
             self.recordButton.clicked.disconnect()
             self.recordButton.clicked.connect(self.recordAndMatch)
-        self.recordingFinishedSignal.emit(currentResult,resultImagePath)
+        self.recordingFinishedSignal.emit(resultText,resultImagePath)
+
+    def parseResultTextFile(self, textPath):
+        with open(textPath) as file:
+            result = file.read()
+        return result
 
     def resultTextFormatter(self, result):
         matchedStringFormat = '{artist} - {title}'
