@@ -160,10 +160,14 @@ Rectangle {
     }
     Audio {
         id: resultsAudio
-        source: "music.wav"
     }
     function playAudio(){
-        resultsAudio.play()
+        if(resultsAudio.playbackState == Audio.PlayingState)
+            resultsAudio.pause()
+        else if(resultsAudio.playbackState == Audio.PausedState)
+            resultsAudio.play()
+        else if(resultsAudio.playbackState == Audio.StoppedState)
+            resultsAudio.play()
     }
 
     Connections {
@@ -171,10 +175,12 @@ Rectangle {
         onClicked: toggleRecording()
     }
     function toggleRecording(){
-        if(state=="ScanningState")
+        if(state=="ScanningState"){
             stopRecording()
-        else
+        }else{
+            resultsAudio.stop()
             startRecording()
+        }
     }
     signal startRecording()
 
@@ -223,14 +229,15 @@ Rectangle {
 
         Text {
             id: resultsText
-            y: 68
-            height: 64
+            // y: 68
+            height: resultsImage.height
             color: "#e6e6e6"
             text: qsTr("Text")
+            clip: true
             anchors.leftMargin: resultsImage.anchors.leftMargin/2
             anchors.left: resultsImage.right
             anchors.rightMargin: resultsImage.anchors.leftMargin
-            anchors.right: parent.right
+            anchors.right: playResultsButton.visible ? playResultsButton.left : parent.right
             anchors.verticalCenter: resultsImage.verticalCenter
             font.pixelSize: 23
             verticalAlignment: Text.AlignVCenter
@@ -238,11 +245,12 @@ Rectangle {
         Button {
             id: playResultsButton
             property real hoverResize : 0
-            property real progress : 0
+            property real progress : resultsAudio.position / resultsAudio.duration
             onHoveredChanged: hovered ? state = "hovered" : state = "idle"
             width: height
-            height: parent.height*4/5
-            text: qsTr("Odtwórz")
+            height: parent.height*2/5
+            text: resultsAudio.playbackState != Audio.PlayingState ? qsTr("►") : qsTr("┃┃")
+            visible: resultsAudio.source != ""
 
             anchors.rightMargin: (resultsItem.height-playResultsButton.height)/2
             anchors.right: parent.right
@@ -308,7 +316,7 @@ Rectangle {
                         property real radius: Math.min(centerWidth - strokeWidth, centerHeight - strokeWidth)
 
                         property real minimumValue: 0
-                        property real maximumValue: 100
+                        property real maximumValue: 1
                         property real currentValue: playResultsButton.progress
 
                         // this is the angle that splits the circle in two arcs

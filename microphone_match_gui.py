@@ -59,6 +59,7 @@ import microphone_match
 import scannerSettingsDialog
 import matcherSettingsDialog
 import audioSettingsDialog
+import re
 
 major, minor, bugfix = QT_VERSION_STR.split('.')
 major = int(major)
@@ -323,11 +324,13 @@ class MainWindow(QMainWindow):
         self.recordButton.clicked.connect(self.interruptRecording)
         self.recordingStartedSignal.emit()
 
-    recordingFinishedSignal = pyqtSignal(str, str)
+    recordingFinishedSignal = pyqtSignal(str, str, str)
     def recordingFinished(self):
         currentResult = self.resultTextFormatter(self.matcherThread.result)
 
         filenameWithoutExtension = os.path.splitext(self.matcherThread.result["filename"])[0]
+        resultAudioPath = self.matcherThread.result["filename"];
+
         imageExtensions = ['png', 'jpg', 'jpeg', 'bmp']
         possibleImagePaths = [os.path.normpath(os.path.join(self.continuousMatcher.databaseDirectoryPath, filenameWithoutExtension + "." + ext)) for ext in imageExtensions]
         imagePaths = [path for path in possibleImagePaths if os.path.exists(path)]
@@ -341,6 +344,8 @@ class MainWindow(QMainWindow):
         textPaths = [path for path in possibleTextPaths if os.path.exists(path)]
         if len(textPaths) > 0:
             resultText = self.parseResultTextFile(textPaths[0])
+            r = re.compile(r"\n$")
+            resultText = r.sub("",resultText)
         else:
             resultText = currentResult
 
@@ -362,7 +367,7 @@ class MainWindow(QMainWindow):
             self.recordButton.setText(u'Nagrywaj')
             self.recordButton.clicked.disconnect()
             self.recordButton.clicked.connect(self.recordAndMatch)
-        self.recordingFinishedSignal.emit(resultText,resultImagePath)
+        self.recordingFinishedSignal.emit(resultText,resultImagePath,resultAudioPath)
 
     def parseResultTextFile(self, textPath):
         with open(textPath) as file:
