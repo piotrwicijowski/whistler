@@ -59,6 +59,7 @@ import microphone_match
 import scannerSettingsDialog
 import matcherSettingsDialog
 import audioSettingsDialog
+import uiSettingsDialog
 import re
 
 major, minor, bugfix = QT_VERSION_STR.split('.')
@@ -157,6 +158,8 @@ class MainWindow(QMainWindow):
         self.defaultImagePath = os.path.join(self.continuousMatcher.applicationPath,'default.png')
         if enableQmlFullscreen:
             self.setupFullscreenView()
+            if(self.continuousMatcher.startFullscreen):
+                self.runFullscreen()
         self.setupMenuBar()
         self.show()
 
@@ -186,6 +189,11 @@ class MainWindow(QMainWindow):
         exitAction.setStatusTip('Zamknij program')
         exitAction.triggered.connect(QApplication.quit)
 
+        uiSettingsAction = QAction(QIcon.fromTheme('gnome-settings'), u'Ustawienia &interfejsu', self)
+        uiSettingsAction.setShortcut('Ctrl+Shift+U')
+        uiSettingsAction.setStatusTip(u'Zmień ustawienia interfejsu')
+        uiSettingsAction.triggered.connect(self.openUiSettings)
+
         audioSettingsAction = QAction(QIcon.fromTheme('gnome-settings'), u'Ustawienia &nagrywania', self)
         audioSettingsAction.setShortcut('Ctrl+Shift+R')
         audioSettingsAction.setStatusTip(u'Zmień ustawienia nagrywania')
@@ -206,6 +214,7 @@ class MainWindow(QMainWindow):
         fileMenu.addAction(chooseDatabaseAction)
         fileMenu.addAction(databaseManagementAction)
         fileMenu.addAction(exitAction)
+        settingsMenu.addAction(uiSettingsAction)
         settingsMenu.addAction(audioSettingsAction)
         settingsMenu.addAction(matcherSettingsAction)
         settingsMenu.addAction(scannerSettingsAction)
@@ -292,6 +301,10 @@ class MainWindow(QMainWindow):
         settingsDialog = matcherSettingsDialog.MatcherSettingsDialog(self, self.continuousMatcher)
         settingsDialog.run()
 
+    def openUiSettings(self, newValue):
+        settingsDialog = uiSettingsDialog.UiSettingDialog(self,self.continuousMatcher)
+        settingsDialog.run()
+
     def openAudioSettings(self, newValue):
         settingsDialog = audioSettingsDialog.AudioSettingDialog(self,self.continuousMatcher)
         settingsDialog.run()
@@ -344,8 +357,8 @@ class MainWindow(QMainWindow):
         textPaths = [path for path in possibleTextPaths if os.path.exists(path)]
         if len(textPaths) > 0:
             resultText = self.parseResultTextFile(textPaths[0])
-            r = re.compile(r"\n$")
-            resultText = r.sub("",resultText)
+            resultText = re.sub(r"(\n)+$","",resultText)
+            resultText = re.sub(r"^(\n)+","",resultText)
         else:
             resultText = currentResult
 

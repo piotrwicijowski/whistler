@@ -130,6 +130,11 @@ class ContinuousMatcher(object):
     
     def initSetting(self):
         settings = QSettings(self.configPath,QSettings.IniFormat)
+        settings.beginGroup('ui')
+        settings.setValue('startFullscreen', True)
+        settings.setValue('enablePlayback',  True)
+        settings.setValue('autoPlayback',    True)
+        settings.endGroup()
         settings.beginGroup('database')
         databaseDirectoryPath = os.path.join(self.applicationPath,'..','files')
         databaseDirectoryPath = os.path.realpath(databaseDirectoryPath)
@@ -189,6 +194,11 @@ class ContinuousMatcher(object):
         del settings
 
     def readSettings(self):
+        self.settings.beginGroup('ui')
+        self.startFullscreen = self.settings.value('startFullscreen', type=bool)
+        self.enablePlayback  = self.settings.value('enablePlayback',  type=bool)
+        self.autoPlayback    = self.settings.value('autoPlayback',    type=bool)
+        self.settings.endGroup()
         self.settings.beginGroup('database')
         self.databaseDirectoryPath = self.settings.value('directoryPath')
         self.databaseFingerprintFile = self.settings.value('fingerprintFile')
@@ -252,6 +262,13 @@ class ContinuousMatcher(object):
         self.saveDatabasePathSettings()
         self.saveFFMpegSettings()
         self.saveArgsSettings()
+
+    def saveUiSettings(self):
+        self.settings.beginGroup('ui')
+        self.settings.setValue('startFullscreen', self.startFullscreen)
+        self.settings.setValue('enablePlayback',  self.enablePlayback)
+        self.settings.setValue('autoPlayback',    self.autoPlayback)
+        self.settings.endGroup()
 
     def saveDatabasePathSettings(self):
         self.settings.beginGroup('database')
