@@ -188,11 +188,23 @@ Rectangle {
 
     signal closeWindow()
 
+    function disableAutoPlayback(disabled){
+        disabled = typeof disabled !== 'undefined' ? disabled : true
+        enableAutoPlayback(!disabled)
+    }
+
+    function enableAutoPlayback(enabled){
+        enabled = typeof enabled !== 'undefined' ? enabled : true
+        playResultsButton.autoEnabled = enabled
+    }
+
     function disablePlayback(disabled){
+        disabled = typeof disabled !== 'undefined' ? disabled : true
         enablePlayback(!disabled)
     }
 
     function enablePlayback(enabled){
+        enabled = typeof enabled !== 'undefined' ? enabled : true
         playResultsButton.enabled = enabled
     }
 
@@ -205,6 +217,8 @@ Rectangle {
         resultsText.text = resultString
         resultsImage.source = imagePath
         resultsAudio.source = audioPath
+        if(playResultsButton.autoEnabled)
+            resultsAudio.play()
     }
 
     function setProgress(progress){
@@ -253,6 +267,7 @@ Rectangle {
         Button {
             id: playResultsButton
             property bool enabled: true
+            property bool autoEnabled: true
             property real hoverResize : 0
             property real progress : resultsAudio.position / resultsAudio.duration
             onHoveredChanged: hovered ? state = "hovered" : state = "idle"
