@@ -259,6 +259,7 @@ class ContinuousMatcher(object):
         self.settings.endGroup()
 
     def saveSettings(self):
+        self.saveUiSettings()
         self.saveDatabasePathSettings()
         self.saveFFMpegSettings()
         self.saveArgsSettings()

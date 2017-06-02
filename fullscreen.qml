@@ -188,6 +188,14 @@ Rectangle {
 
     signal closeWindow()
 
+    function disablePlayback(disabled){
+        enablePlayback(!disabled)
+    }
+
+    function enablePlayback(enabled){
+        playResultsButton.enabled = enabled
+    }
+
     function stateRecording(){
         state = "ScanningState"
     }
@@ -244,13 +252,14 @@ Rectangle {
         }
         Button {
             id: playResultsButton
+            property bool enabled: true
             property real hoverResize : 0
             property real progress : resultsAudio.position / resultsAudio.duration
             onHoveredChanged: hovered ? state = "hovered" : state = "idle"
             width: height
             height: parent.height*2/5
             text: resultsAudio.playbackState != Audio.PlayingState ? qsTr("►") : qsTr("┃┃")
-            visible: resultsAudio.source != ""
+            visible: resultsAudio.source != "" && enabled
 
             anchors.rightMargin: (resultsItem.height-playResultsButton.height)/2
             anchors.right: parent.right

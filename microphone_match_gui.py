@@ -230,6 +230,8 @@ class MainWindow(QMainWindow):
             self.recordingStartedSignal.connect(mainRootObject.stateRecording)
             self.recordingFinishedSignal.connect(mainRootObject.stateReady)
             self.progressChangedSignal.connect(mainRootObject.setProgress)
+            self.enablePlaybackSignal.connect(mainRootObject.enablePlayback)
+            self.enablePlaybackSignal.emit(self.continuousMatcher.enablePlayback)
             self.stackedWidget.addWidget(self.fullscreenWidget)
 
     def runFullscreen(self):
@@ -304,6 +306,7 @@ class MainWindow(QMainWindow):
     def openUiSettings(self, newValue):
         settingsDialog = uiSettingsDialog.UiSettingDialog(self,self.continuousMatcher)
         settingsDialog.run()
+        self.enablePlaybackSignal.emit(self.continuousMatcher.enablePlayback)
 
     def openAudioSettings(self, newValue):
         settingsDialog = audioSettingsDialog.AudioSettingDialog(self,self.continuousMatcher)
@@ -323,6 +326,8 @@ class MainWindow(QMainWindow):
 
     def interruptRecording(self):
         self.threadInterrupter['interrupted'] = True
+
+    enablePlaybackSignal = pyqtSignal(bool)
 
     recordingStartedSignal = pyqtSignal()
     def recordAndMatch(self):
