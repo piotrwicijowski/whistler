@@ -270,9 +270,10 @@ Rectangle {
             property bool autoEnabled: true
             property real hoverResize : 0
             property real progress : resultsAudio.position / resultsAudio.duration
+            property real ringOpacity : 0.0
             onHoveredChanged: hovered ? state = "hovered" : state = "idle"
             width: height
-            height: parent.height*2/5
+            height: parent.height*1/4
             text: resultsAudio.playbackState != Audio.PlayingState ? qsTr("►") : qsTr("┃┃")
             visible: resultsAudio.source != "" && enabled
 
@@ -287,6 +288,10 @@ Rectangle {
                         target: playResultsButton
                         hoverResize: 10.0
                     }
+                    PropertyChanges {
+                        target: playResultsButton
+                        ringOpacity: 1.0
+                    }
                 },
                 State {
                     name: "idle"
@@ -294,9 +299,20 @@ Rectangle {
                         target: playResultsButton
                         hoverResize: 0.0
                     }
+                    PropertyChanges {
+                        target: playResultsButton
+                        ringOpacity: 0.0
+                    }
                 }
             ]
             transitions: Transition {
+
+                PropertyAnimation {
+                    target: playResultsButton
+                    properties: "ringOpacity"
+                    duration: 100
+                    easing.type: Easing.InOutQuad
+                }
 
                 PropertyAnimation {
                     target: playResultsButton
@@ -316,6 +332,7 @@ Rectangle {
                     height: playResultsButton.height + playResultsButton.hoverResize
                     Rectangle {
                         property real strokeWidth: playResultsButton.activeFocus ? 4 : 2
+                        opacity: playResultsButton.ringOpacity
                         id: playResultButtonCircle
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -383,7 +400,7 @@ Rectangle {
                     verticalAlignment: Text.AlignVCenter
                     horizontalAlignment: Text.AlignHCenter
                     //font.family: "Helvetica"
-                    font.pointSize: 14
+                    font.pointSize: 24
                     color: "#e6e6e6"
                     text: control.text
                 }
