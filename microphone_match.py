@@ -85,7 +85,7 @@ class ContinuousMatcher(object):
                       if os.path.isfile(os.path.join(fullDatabaseDirectoryPath,f))
                       and os.path.splitext(f)[1]=='.mp3']
         for filename in audioFiles:
-            self.analyzer.ingest(self.hash_tab, str(filename))
+            self.analyzer.ingest(self.hash_tab, filename.encode(os_encoding))
         if self.hash_tab and self.hash_tab.dirty:
             fullFingerprintPath = os.path.join(self.applicationPath, self.databaseDirectoryPath, self.databaseFingerprintFile)
             self.hash_tab.save(fullFingerprintPath)
