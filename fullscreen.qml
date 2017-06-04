@@ -1,7 +1,7 @@
 import QtQuick 2.5
 import QtQuick.Controls 1.4
 import QtQuick.Controls.Styles 1.4
-import QtMultimedia 5.5
+import QtMultimedia 5.8
 
 Rectangle {
     id: fullscreenItem
@@ -154,13 +154,30 @@ Rectangle {
         onActivated: closeWindow()
         context: Qt.ApplicationShortcut
     }
+
     Connections {
         target: playResultsButton
         onClicked: playAudio()
     }
+
+    // Connections {
+    //     target: playVideoButton
+    //     onClicked: playVideo()
+    // }
+
     Audio {
         id: resultsAudio
     }
+
+    function playVideo(){
+        // if(resultsVideo.playbackState == MediaPlayer.PlayingState)
+        //     resultsVideo.pause()
+        // else if(resultsVideo.playbackState == MediaPlayer.PausedState)
+        //     resultsVideo.play()
+        // else if(resultsVideo.playbackState == MediaPlayer.StoppedState)
+            resultsVideo.play()
+    }
+
     function playAudio(){
         if(resultsAudio.playbackState == Audio.PlayingState)
             resultsAudio.pause()
@@ -212,11 +229,12 @@ Rectangle {
         state = "ScanningState"
     }
 
-    function stateReady(resultString, imagePath, audioPath){
+    function stateReady(resultString, imagePath, audioPath, videoPath){
         state = "ResultState"
         resultsText.text = resultString
         resultsImage.source = imagePath
         resultsAudio.source = audioPath
+        resultsVideo.source = videoPath
         if(playResultsButton.autoEnabled)
             resultsAudio.play()
     }
@@ -240,6 +258,7 @@ Rectangle {
             id: resultsImage
             y: 57
             width: height
+            fillMode: Image.PreserveAspectFit
             height: parent.height*4/5
             opacity: 1
             anchors.leftMargin: (resultsItem.height-resultsImage.height)/2
@@ -248,6 +267,24 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             source: "image.jpg"
         }
+
+        Video {
+            property bool enabled: true
+            property bool autoEnabled: true
+            id: resultsVideo
+            width: height
+            height: parent.height*4/5
+            fillMode: VideoOutput.PreserveAspectFit
+            opacity: 1
+            anchors.leftMargin: (resultsItem.height-resultsVideo.height)/2
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            autoPlay: true
+            onStopped: play()
+            muted: true
+            // loops: MediaPlayer.Infinite
+        }
+
 
         Text {
             id: resultsText

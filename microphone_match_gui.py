@@ -347,12 +347,20 @@ class MainWindow(QMainWindow):
         self.recordButton.clicked.connect(self.interruptRecording)
         self.recordingStartedSignal.emit()
 
-    recordingFinishedSignal = pyqtSignal(str, str, str)
+    recordingFinishedSignal = pyqtSignal(str, str, str, str)
     def recordingFinished(self):
         currentResult = self.resultTextFormatter(self.matcherThread.result)
 
         filenameWithoutExtension = os.path.splitext(self.matcherThread.result["filename"])[0]
         resultAudioPath = self.matcherThread.result["filename"];
+
+        videoExtensions = ['AVI', 'avi', 'MOV', 'mov']
+        possibleVideoPaths = [os.path.normpath(os.path.join(self.continuousMatcher.databaseDirectoryPath, filenameWithoutExtension + "." + ext)) for ext in videoExtensions]
+        videoPaths = [path for path in possibleVideoPaths if os.path.exists(path)]
+        if len(videoPaths) > 0:
+            resultVideoPath = videoPaths[0]
+        else:
+            resultVideoPath = ""
 
         imageExtensions = ['png', 'jpg', 'jpeg', 'bmp']
         possibleImagePaths = [os.path.normpath(os.path.join(self.continuousMatcher.databaseDirectoryPath, filenameWithoutExtension + "." + ext)) for ext in imageExtensions]
@@ -390,7 +398,7 @@ class MainWindow(QMainWindow):
             self.recordButton.setText(u'Nagrywaj')
             self.recordButton.clicked.disconnect()
             self.recordButton.clicked.connect(self.recordAndMatch)
-        self.recordingFinishedSignal.emit(resultText,resultImagePath,resultAudioPath)
+        self.recordingFinishedSignal.emit(resultText,resultImagePath,resultAudioPath,resultVideoPath)
 
     def parseResultTextFile(self, textPath):
         with open(textPath) as file:
