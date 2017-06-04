@@ -1,6 +1,7 @@
 import QtQuick 2.5
 import QtQuick.Controls 1.4
 import QtQuick.Controls.Styles 1.4
+import QtMultimedia 5.5
 
 Rectangle {
     id: fullscreenItem
@@ -153,16 +154,33 @@ Rectangle {
         onActivated: closeWindow()
         context: Qt.ApplicationShortcut
     }
+    Connections {
+        target: playResultsButton
+        onClicked: playAudio()
+    }
+    Audio {
+        id: resultsAudio
+    }
+    function playAudio(){
+        if(resultsAudio.playbackState == Audio.PlayingState)
+            resultsAudio.pause()
+        else if(resultsAudio.playbackState == Audio.PausedState)
+            resultsAudio.play()
+        else if(resultsAudio.playbackState == Audio.StoppedState)
+            resultsAudio.play()
+    }
 
     Connections {
         target: startStopButton
         onClicked: toggleRecording()
     }
     function toggleRecording(){
-        if(state=="ScanningState")
+        if(state=="ScanningState"){
             stopRecording()
-        else
+        }else{
+            resultsAudio.stop()
             startRecording()
+        }
     }
     signal startRecording()
 
@@ -170,14 +188,37 @@ Rectangle {
 
     signal closeWindow()
 
+    function disableAutoPlayback(disabled){
+        disabled = typeof disabled !== 'undefined' ? disabled : true
+        enableAutoPlayback(!disabled)
+    }
+
+    function enableAutoPlayback(enabled){
+        enabled = typeof enabled !== 'undefined' ? enabled : true
+        playResultsButton.autoEnabled = enabled
+    }
+
+    function disablePlayback(disabled){
+        disabled = typeof disabled !== 'undefined' ? disabled : true
+        enablePlayback(!disabled)
+    }
+
+    function enablePlayback(enabled){
+        enabled = typeof enabled !== 'undefined' ? enabled : true
+        playResultsButton.enabled = enabled
+    }
+
     function stateRecording(){
         state = "ScanningState"
     }
 
-    function stateReady(resultString, imagePath){
+    function stateReady(resultString, imagePath, audioPath){
         state = "ResultState"
         resultsText.text = resultString
         resultsImage.source = imagePath
+        resultsAudio.source = audioPath
+        if(playResultsButton.autoEnabled)
+            resultsAudio.play()
     }
 
     function setProgress(progress){
@@ -210,18 +251,162 @@ Rectangle {
 
         Text {
             id: resultsText
-            y: 68
-            height: 64
+            // y: 68
+            height: resultsImage.height
             color: "#e6e6e6"
             text: qsTr("Text")
+            clip: true
             anchors.leftMargin: resultsImage.anchors.leftMargin/2
             anchors.left: resultsImage.right
             anchors.rightMargin: resultsImage.anchors.leftMargin
-            anchors.right: parent.right
+            anchors.right: playResultsButton.visible ? playResultsButton.left : parent.right
             anchors.verticalCenter: resultsImage.verticalCenter
             font.pixelSize: 23
             verticalAlignment: Text.AlignVCenter
         }
+        Button {
+            id: playResultsButton
+            property bool enabled: true
+            property bool autoEnabled: true
+            property real hoverResize : 0
+            property real progress : resultsAudio.position / resultsAudio.duration
+            property real ringOpacity : 0.0
+            onHoveredChanged: hovered ? state = "hovered" : state = "idle"
+            width: height
+            height: parent.height*1/4
+            text: resultsAudio.playbackState != Audio.PlayingState ? qsTr("►") : qsTr("┃┃")
+            visible: resultsAudio.source != "" && enabled
+
+            anchors.rightMargin: (resultsItem.height-playResultsButton.height)/2
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            //isDefault: true
+            states: [
+                State {
+                    name: "hovered"
+                    PropertyChanges {
+                        target: playResultsButton
+                        hoverResize: 10.0
+                    }
+                    PropertyChanges {
+                        target: playResultsButton
+                        ringOpacity: 1.0
+                    }
+                },
+                State {
+                    name: "idle"
+                    PropertyChanges {
+                        target: playResultsButton
+                        hoverResize: 0.0
+                    }
+                    PropertyChanges {
+                        target: playResultsButton
+                        ringOpacity: 0.0
+                    }
+                }
+            ]
+            transitions: Transition {
+
+                PropertyAnimation {
+                    target: playResultsButton
+                    properties: "ringOpacity"
+                    duration: 100
+                    easing.type: Easing.InOutQuad
+                }
+
+                PropertyAnimation {
+                    target: playResultsButton
+                    properties: "hoverResize"
+                    duration: 100
+                    easing.type: Easing.InOutQuad
+                }
+
+            }
+            style: ButtonStyle {
+                background:
+                    Item{
+                    id: playResultButtonBackgroundItem
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: playResultsButton.width + playResultsButton.hoverResize
+                    height: playResultsButton.height + playResultsButton.hoverResize
+                    Rectangle {
+                        property real strokeWidth: playResultsButton.activeFocus ? 4 : 2
+                        opacity: playResultsButton.ringOpacity
+                        id: playResultButtonCircle
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: parent.width - 2*playProgressArc.strokeWidth + strokeWidth
+                        height: parent.height - 2*playProgressArc.strokeWidth + strokeWidth
+                        color: "#00000000"
+                        radius: width*0.5
+                        border.width: strokeWidth
+                        z: 0
+                        border.color: "#e6e6e6"
+                    }
+                    Canvas {
+                        id: playProgressArc
+                        anchors.fill: parent
+                        antialiasing: true
+
+                        property color progressColor: "lightblue"
+
+                        property real strokeWidth: 6
+                        property real centerWidth: width / 2
+                        property real centerHeight: height / 2
+                        property real radius: Math.min(centerWidth - strokeWidth, centerHeight - strokeWidth)
+
+                        property real minimumValue: 0
+                        property real maximumValue: 1
+                        property real currentValue: playResultsButton.progress
+
+                        // this is the angle that splits the circle in two arcs
+                        // first arc is drawn from 0 radians to angle radians
+                        // second arc is angle radians to 2*PI radians
+                        property real angle: (currentValue - minimumValue) / (maximumValue - minimumValue) * 2 * Math.PI
+
+                        // we want both circle to start / end at 12 o'clock
+                        // without this offset we would start / end at 9 o'clock
+                        property real angleOffset: -Math.PI / 2
+
+                        onProgressColorChanged: requestPaint()
+                        onMinimumValueChanged: requestPaint()
+                        onMaximumValueChanged: requestPaint()
+                        onCurrentValueChanged: requestPaint()
+
+                        onPaint: {
+                            var ctx = getContext("2d");
+                            ctx.save();
+
+                            ctx.clearRect(0, 0, playProgressArc.width, playProgressArc.height);
+
+                            ctx.beginPath();
+                            ctx.lineWidth = playProgressArc.strokeWidth;
+                            ctx.strokeStyle = playProgressArc.progressColor;
+                            ctx.arc(playProgressArc.centerWidth,
+                                    playProgressArc.centerHeight,
+                                    playProgressArc.radius,
+                                    playProgressArc.angleOffset,
+                                    playProgressArc.angleOffset + playProgressArc.angle);
+                            ctx.stroke();
+
+                            ctx.restore();
+                        }
+                    }
+                }
+
+                label: Text {
+                    renderType: Text.NativeRendering
+                    verticalAlignment: Text.AlignVCenter
+                    horizontalAlignment: Text.AlignHCenter
+                    //font.family: "Helvetica"
+                    font.pointSize: 24
+                    color: "#e6e6e6"
+                    text: control.text
+                }
+            }
+        }
+
     }
 
     Button {

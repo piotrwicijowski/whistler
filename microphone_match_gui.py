@@ -59,6 +59,8 @@ import microphone_match
 import scannerSettingsDialog
 import matcherSettingsDialog
 import audioSettingsDialog
+import uiSettingsDialog
+import re
 
 major, minor, bugfix = QT_VERSION_STR.split('.')
 major = int(major)
@@ -156,6 +158,8 @@ class MainWindow(QMainWindow):
         self.defaultImagePath = os.path.join(self.continuousMatcher.applicationPath,'default.png')
         if enableQmlFullscreen:
             self.setupFullscreenView()
+            if(self.continuousMatcher.startFullscreen):
+                self.runFullscreen()
         self.setupMenuBar()
         self.show()
 
@@ -185,6 +189,11 @@ class MainWindow(QMainWindow):
         exitAction.setStatusTip('Zamknij program')
         exitAction.triggered.connect(QApplication.quit)
 
+        uiSettingsAction = QAction(QIcon.fromTheme('gnome-settings'), u'Ustawienia &interfejsu', self)
+        uiSettingsAction.setShortcut('Ctrl+Shift+U')
+        uiSettingsAction.setStatusTip(u'Zmień ustawienia interfejsu')
+        uiSettingsAction.triggered.connect(self.openUiSettings)
+
         audioSettingsAction = QAction(QIcon.fromTheme('gnome-settings'), u'Ustawienia &nagrywania', self)
         audioSettingsAction.setShortcut('Ctrl+Shift+R')
         audioSettingsAction.setStatusTip(u'Zmień ustawienia nagrywania')
@@ -205,6 +214,7 @@ class MainWindow(QMainWindow):
         fileMenu.addAction(chooseDatabaseAction)
         fileMenu.addAction(databaseManagementAction)
         fileMenu.addAction(exitAction)
+        settingsMenu.addAction(uiSettingsAction)
         settingsMenu.addAction(audioSettingsAction)
         settingsMenu.addAction(matcherSettingsAction)
         settingsMenu.addAction(scannerSettingsAction)
@@ -220,6 +230,10 @@ class MainWindow(QMainWindow):
             self.recordingStartedSignal.connect(mainRootObject.stateRecording)
             self.recordingFinishedSignal.connect(mainRootObject.stateReady)
             self.progressChangedSignal.connect(mainRootObject.setProgress)
+            self.enablePlaybackSignal.connect(mainRootObject.enablePlayback)
+            self.enableAutoPlaybackSignal.connect(mainRootObject.enableAutoPlayback)
+            self.enablePlaybackSignal.emit(self.continuousMatcher.enablePlayback)
+            self.enableAutoPlaybackSignal.emit(self.continuousMatcher.autoPlayback)
             self.stackedWidget.addWidget(self.fullscreenWidget)
 
     def runFullscreen(self):
@@ -291,6 +305,12 @@ class MainWindow(QMainWindow):
         settingsDialog = matcherSettingsDialog.MatcherSettingsDialog(self, self.continuousMatcher)
         settingsDialog.run()
 
+    def openUiSettings(self, newValue):
+        settingsDialog = uiSettingsDialog.UiSettingDialog(self,self.continuousMatcher)
+        settingsDialog.run()
+        self.enablePlaybackSignal.emit(self.continuousMatcher.enablePlayback)
+        self.enableAutoPlaybackSignal.emit(self.continuousMatcher.autoPlayback)
+
     def openAudioSettings(self, newValue):
         settingsDialog = audioSettingsDialog.AudioSettingDialog(self,self.continuousMatcher)
         settingsDialog.run()
@@ -310,6 +330,10 @@ class MainWindow(QMainWindow):
     def interruptRecording(self):
         self.threadInterrupter['interrupted'] = True
 
+    enableAutoPlaybackSignal = pyqtSignal(bool)
+
+    enablePlaybackSignal = pyqtSignal(bool)
+
     recordingStartedSignal = pyqtSignal()
     def recordAndMatch(self):
         self.threadInterrupter['interrupted'] = False
@@ -323,11 +347,13 @@ class MainWindow(QMainWindow):
         self.recordButton.clicked.connect(self.interruptRecording)
         self.recordingStartedSignal.emit()
 
-    recordingFinishedSignal = pyqtSignal(str, str)
+    recordingFinishedSignal = pyqtSignal(str, str, str)
     def recordingFinished(self):
         currentResult = self.resultTextFormatter(self.matcherThread.result)
 
         filenameWithoutExtension = os.path.splitext(self.matcherThread.result["filename"])[0]
+        resultAudioPath = self.matcherThread.result["filename"];
+
         imageExtensions = ['png', 'jpg', 'jpeg', 'bmp']
         possibleImagePaths = [os.path.normpath(os.path.join(self.continuousMatcher.databaseDirectoryPath, filenameWithoutExtension + "." + ext)) for ext in imageExtensions]
         imagePaths = [path for path in possibleImagePaths if os.path.exists(path)]
@@ -341,6 +367,8 @@ class MainWindow(QMainWindow):
         textPaths = [path for path in possibleTextPaths if os.path.exists(path)]
         if len(textPaths) > 0:
             resultText = self.parseResultTextFile(textPaths[0])
+            resultText = re.sub(r"(\n)+$","",resultText)
+            resultText = re.sub(r"^(\n)+","",resultText)
         else:
             resultText = currentResult
 
@@ -362,7 +390,7 @@ class MainWindow(QMainWindow):
             self.recordButton.setText(u'Nagrywaj')
             self.recordButton.clicked.disconnect()
             self.recordButton.clicked.connect(self.recordAndMatch)
-        self.recordingFinishedSignal.emit(resultText,resultImagePath)
+        self.recordingFinishedSignal.emit(resultText,resultImagePath,resultAudioPath)
 
     def parseResultTextFile(self, textPath):
         with open(textPath) as file:
