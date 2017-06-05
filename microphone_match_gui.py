@@ -351,7 +351,8 @@ class MainWindow(QMainWindow):
     def recordingFinished(self):
         currentResult = self.resultTextFormatter(self.matcherThread.result)
 
-        filenameWithoutExtension = os.path.splitext(self.matcherThread.result["filename"])[0]
+        rawFilenameWithoutExtension = os.path.splitext(self.matcherThread.result["filename"])[0]
+        filenameWithoutExtension = re.sub(r"\[.*\]","",rawFilenameWithoutExtension)
         resultAudioPath = self.matcherThread.result["filename"];
 
         videoExtensions = ['AVI', 'avi', 'MOV', 'mov']
