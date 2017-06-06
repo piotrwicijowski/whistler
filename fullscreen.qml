@@ -25,7 +25,7 @@ Rectangle {
         property real hoverResize : 0
         property real progress : 0
         onHoveredChanged: hovered ? state = "hovered" : state = "idle"
-        width: Math.min(fullscreenItem.width/4,fullscreenItem.height/4)
+        width: Math.min(fullscreenItem.width/10,fullscreenItem.height/10)
         height: width
         text: qsTr("Start")
 
@@ -246,39 +246,35 @@ Rectangle {
     Item {
         id: resultsItem
         x: 93
-        width: parent.width*10/12
-        height: parent.height/2.5
+        width: parent.width*0.75
+        height: parent.height*0.75
         anchors.topMargin: 60
         anchors.horizontalCenterOffset: 0
         anchors.top: parent.top
         opacity: 0
         anchors.horizontalCenter: parent.horizontalCenter
-
+        property real padding: resultsImage.x
         Image {
             id: resultsImage
-            y: 57
-            width: height
-            fillMode: Image.PreserveAspectFit
-            height: parent.height*4/5
+            width: parent.width*10/12
+            height: width*9/16
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.topMargin: parent.padding
             opacity: 1
-            anchors.leftMargin: (resultsItem.height-resultsImage.height)/2
-            //anchors.leftMargin: (resultsItem.height-resultsImage.height)
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
+            fillMode: Image.PreserveAspectFit
             source: "image.jpg"
         }
 
         Video {
             property bool enabled: true
             property bool autoEnabled: true
+            width: parent.width*10/12
+            height: width*9/16
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.topMargin: parent.padding
             id: resultsVideo
-            width: height
-            height: parent.height*4/5
             fillMode: VideoOutput.PreserveAspectFit
             opacity: 1
-            anchors.leftMargin: (resultsItem.height-resultsVideo.height)/2
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
             autoPlay: true
             onStopped: play()
             muted: true
@@ -289,17 +285,22 @@ Rectangle {
         Text {
             id: resultsText
             // y: 68
-            height: resultsImage.height
+            height: parent.height/4
             color: "#e6e6e6"
             text: qsTr("Text")
             clip: true
-            anchors.leftMargin: resultsImage.anchors.leftMargin/2
-            anchors.left: resultsImage.right
-            anchors.rightMargin: resultsImage.anchors.leftMargin
-            anchors.right: playResultsButton.visible ? playResultsButton.left : parent.right
-            anchors.verticalCenter: resultsImage.verticalCenter
+            anchors.right: resultsImage.right
+            //anchors.left: playResultsButton.visible ? playResultsButton.right : resultsImage.left
+            anchors.left: playResultsButton.visible ? playResultsButton.right : resultsImage.left
+            anchors.leftMargin: parent.padding/2
+            anchors.verticalCenter: resultsBottomSpacer.verticalCenter
             font.pixelSize: 23
             verticalAlignment: Text.AlignVCenter
+        }
+        Item{
+            id: resultsBottomSpacer
+            anchors.top: resultsImage.bottom
+            anchors.bottom: parent.bottom
         }
         Button {
             id: playResultsButton
@@ -310,13 +311,16 @@ Rectangle {
             property real ringOpacity : 0.0
             onHoveredChanged: hovered ? state = "hovered" : state = "idle"
             width: height
-            height: parent.height*1/4
+            height: (parent.height - resultsImage.height)*0.75
             text: resultsAudio.playbackState != Audio.PlayingState ? qsTr("►") : qsTr("┃┃")
             visible: resultsAudio.source != "" && enabled
 
-            anchors.rightMargin: (resultsItem.height-playResultsButton.height)/2
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
+            //anchors.rightMargin: (resultsItem.height-playResultsButton.height)/2
+            anchors.left: parent.left
+            anchors.leftMargin: parent.padding
+            anchors.verticalCenter: resultsBottomSpacer.verticalCenter
+            //anchors.bottom: parent.bottom
+            //anchors.verticalCenter: parent.verticalCenter
             //isDefault: true
             states: [
                 State {
@@ -528,34 +532,57 @@ Rectangle {
                 target: startStopButton
                 text: qsTr("Start")
             }
+
+            PropertyChanges {
+                target: resultsText
+                anchors.rightMargin: 19
+            }
         }
     ]
-    transitions: Transition {
-        // smoothly reanchor myRect and move into new position
-        AnchorAnimation {
-            targets: resultsItem
-            duration: 200
-            easing.type: Easing.InOutQuad
-        }
+    transitions: [
+        Transition{
+            to: "ResultState"
+            ParallelAnimation{
+                AnchorAnimation {
+                    targets: resultsItem
+                    duration: 200
+                    easing.type: Easing.InOutQuad
+                }
+                AnchorAnimation {
+                    targets: startStopSpacer
+                    duration: 100
+                    easing.type: Easing.InOutQuad
+                }
 
-        AnchorAnimation {
-            targets: startStopSpacer
-            duration: 100
-            easing.type: Easing.InOutQuad
-        }
+                PropertyAnimation {
+                    target: resultsItem
+                    properties: "opacity"
+                    duration: 200
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        },
+        Transition{
+            to: "ScanningState"
+            ParallelAnimation{
+                AnchorAnimation {
+                    targets: resultsItem
+                    duration: 100
+                    easing.type: Easing.InOutQuad
+                }
+                AnchorAnimation {
+                    targets: startStopSpacer
+                    duration: 200
+                    easing.type: Easing.InOutQuad
+                }
 
-        PropertyAnimation {
-            target: resultsItem
-            properties: "opacity"
-            duration: 200
-            easing.type: Easing.InOutQuad
+                PropertyAnimation {
+                    target: resultsItem
+                    properties: "opacity"
+                    duration: 100
+                    easing.type: Easing.InOutQuad
+                }
+            }
         }
-
-        PropertyAnimation {
-            target: resultsImage
-            properties: "anchors.leftMargin"
-            duration: 200
-            easing.type: Easing.InOutQuad
-        }
-    }
+    ]
 }
