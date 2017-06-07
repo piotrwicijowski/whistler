@@ -24,9 +24,10 @@ Rectangle {
         id: startStopButton
         property real hoverResize : 0
         property real progress : 0
+        property real realSize : Math.min(fullscreenItem.width/4,fullscreenItem.height/4)
         onHoveredChanged: hovered ? state = "hovered" : state = "idle"
-        width: Math.min(fullscreenItem.width/10,fullscreenItem.height/10)
-        height: width
+        width: realSize
+        height: realSize
         text: qsTr("Start")
 
         visible: true
@@ -250,10 +251,12 @@ Rectangle {
         height: parent.height*0.75
         anchors.topMargin: 60
         anchors.horizontalCenterOffset: 0
+        anchors.verticalCenterOffset: -startStopButton.height/2
         anchors.top: parent.top
         opacity: 0
         anchors.horizontalCenter: parent.horizontalCenter
         property real padding: resultsImage.x
+        property real realLeftPadding: (width - resultsImage.paintedWidth)/2
         Image {
             id: resultsImage
             width: parent.width*10/12
@@ -317,7 +320,7 @@ Rectangle {
 
             //anchors.rightMargin: (resultsItem.height-playResultsButton.height)/2
             anchors.left: parent.left
-            anchors.leftMargin: parent.padding
+            anchors.leftMargin: parent.realLeftPadding
             anchors.verticalCenter: resultsBottomSpacer.verticalCenter
             //anchors.bottom: parent.bottom
             //anchors.verticalCenter: parent.verticalCenter
@@ -502,8 +505,9 @@ Rectangle {
             PropertyChanges {
                 target: startStopButton
                 text: qsTr("Skanowanie")
-                anchors.verticalCenterOffset: 0
-                anchors.horizontalCenterOffset: 0
+                //anchors.verticalCenterOffset: 0
+                //anchors.horizontalCenterOffset: 0
+                realSize: Math.min(fullscreenItem.width/4,fullscreenItem.height/4)
             }
         },
         State {
@@ -531,6 +535,7 @@ Rectangle {
             PropertyChanges {
                 target: startStopButton
                 text: qsTr("Start")
+                realSize: Math.min(fullscreenItem.width/10,fullscreenItem.height/10)
             }
 
             PropertyChanges {
@@ -553,10 +558,15 @@ Rectangle {
                     duration: 100
                     easing.type: Easing.InOutQuad
                 }
-
                 PropertyAnimation {
                     target: resultsItem
                     properties: "opacity"
+                    duration: 200
+                    easing.type: Easing.InOutQuad
+                }
+                PropertyAnimation {
+                    target: startStopButton
+                    properties: "realSize"
                     duration: 200
                     easing.type: Easing.InOutQuad
                 }
@@ -580,6 +590,12 @@ Rectangle {
                     target: resultsItem
                     properties: "opacity"
                     duration: 100
+                    easing.type: Easing.InOutQuad
+                }
+                PropertyAnimation {
+                    target: startStopButton
+                    properties: "realSize"
+                    duration: 200
                     easing.type: Easing.InOutQuad
                 }
             }
