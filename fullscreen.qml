@@ -2,6 +2,7 @@ import QtQuick 2.5
 import QtQuick.Controls 1.4
 import QtQuick.Controls.Styles 1.4
 import QtMultimedia 5.8
+import QtGraphicalEffects 1.0
 
 Rectangle {
     id: fullscreenItem
@@ -28,15 +29,21 @@ Rectangle {
         onHoveredChanged: hovered ? state = "hovered" : state = "idle"
         width: realSize
         height: realSize
-        text: qsTr("Start")
+        //text: qsTr("Start")
 
         visible: true
         anchors.verticalCenter: startStopSpacer.verticalCenter
         anchors.horizontalCenter: startStopSpacer.horizontalCenter
         isDefault: true
+        property bool isRecording: false
+        property string micImageSource: "mic.svg"
         states: [
             State {
                 name: "hovered"
+                PropertyChanges {
+                    target: startStopButton
+                    micImageSource: startStopButton.isRecording ? "mic-slash.svg" : "mic.svg"
+                }
                 PropertyChanges {
                     target: startStopButton
                     hoverResize: 10.0
@@ -47,6 +54,10 @@ Rectangle {
                 PropertyChanges {
                     target: startStopButton
                     hoverResize: 0.0
+                }
+                PropertyChanges {
+                    target: startStopButton
+                    micImageSource: "mic.svg"
                 }
             }
         ]
@@ -68,6 +79,22 @@ Rectangle {
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: startStopButton.width + startStopButton.hoverResize
                 height: startStopButton.height + startStopButton.hoverResize
+                Image {
+                    id: startStopMicImage
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: parent.width/2
+                    height: parent.height/2
+                    smooth: true
+                    mipmap: true
+                    antialiasing: true
+                    source: startStopButton.micImageSource
+                }
+                ColorOverlay{
+                    anchors.fill: startStopMicImage
+                    source: startStopMicImage
+                    color: "#e6e6e6"
+                }
                 Rectangle {
                     property real strokeWidth: startStopButton.activeFocus ? 4 : 2
                     id: startStopButtonCircle
@@ -132,15 +159,15 @@ Rectangle {
                 }
             }
 
-            label: Text {
-                renderType: Text.NativeRendering
-                verticalAlignment: Text.AlignVCenter
-                horizontalAlignment: Text.AlignHCenter
-                //font.family: "Helvetica"
-                font.pointSize: 14
-                color: "#e6e6e6"
-                text: control.text
-            }
+            //label: Text {
+            //    renderType: Text.NativeRendering
+            //    verticalAlignment: Text.AlignVCenter
+            //    horizontalAlignment: Text.AlignHCenter
+            //    //font.family: "Helvetica"
+            //    font.pointSize: 14
+            //    color: "#e6e6e6"
+            //    text: control.text
+            //}
         }
     }
 
@@ -294,8 +321,8 @@ Rectangle {
             clip: true
             anchors.right: resultsImage.right
             //anchors.left: playResultsButton.visible ? playResultsButton.right : resultsImage.left
-            anchors.left: playResultsButton.visible ? playResultsButton.right : resultsImage.left
-            anchors.leftMargin: parent.padding/2
+            anchors.left: playResultsButton.visible ? playResultsButton.right : parent.left
+            anchors.leftMargin: playResultsButton.visible ? parent.padding/2 : parent.realLeftPadding
             anchors.verticalCenter: resultsBottomSpacer.verticalCenter
             font.pixelSize: 23
             verticalAlignment: Text.AlignVCenter
@@ -504,7 +531,8 @@ Rectangle {
 
             PropertyChanges {
                 target: startStopButton
-                text: qsTr("Skanowanie")
+                isRecording: true
+                //text: qsTr("Skanowanie")
                 //anchors.verticalCenterOffset: 0
                 //anchors.horizontalCenterOffset: 0
                 realSize: Math.min(fullscreenItem.width/4,fullscreenItem.height/4)
@@ -534,7 +562,8 @@ Rectangle {
             //}
             PropertyChanges {
                 target: startStopButton
-                text: qsTr("Start")
+                isRecording: false
+                //text: qsTr("Start")
                 realSize: Math.min(fullscreenItem.width/10,fullscreenItem.height/10)
             }
 
