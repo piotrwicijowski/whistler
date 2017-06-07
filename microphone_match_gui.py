@@ -156,6 +156,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.stackedWidget)
         self.runningInFullscreen = False
         self.defaultImagePath = os.path.join(self.continuousMatcher.applicationPath,'default.png')
+        self.defaultText = u'Niestety, nie znaleziono pasującego nagrania,<br>Spróbuj ponownie'
         if enableQmlFullscreen:
             self.setupFullscreenView()
             if(self.continuousMatcher.startFullscreen):
@@ -379,16 +380,16 @@ class MainWindow(QMainWindow):
             resultText = re.sub(r"(\n)+$","",resultText)
             resultText = re.sub(r"^(\n)+","",resultText)
         else:
-            resultText = currentResult
+            resultText = self.defaultText
 
         self.resultLabel.setText(resultText)
         self.pictureImage = QImage(resultImagePath)
         self.pictureImage = self.pictureImage.scaled(200,200,Qt.IgnoreAspectRatio,Qt.FastTransformation)
         self.pictureLabel.setAlignment( Qt.AlignRight | Qt.AlignVCenter );
         self.pictureLabel.setPixmap(QPixmap.fromImage(self.pictureImage))
-        if(len(self.recentList) == 0 or self.recentList[-1] != resultText):
-            self.recentList.append(resultText)
-            self.recentListWidget.addItem(QListWidgetItem(resultText))
+        # if(len(self.recentList) == 0 or self.recentList[-1] != resultText):
+        #     self.recentList.append(resultText)
+        #     self.recentListWidget.addItem(QListWidgetItem(resultText))
         self.progressBar.setValue(100)
         self.progress = 100.0
         self.progressChangedSignal.emit(self.progress)

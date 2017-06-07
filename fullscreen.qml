@@ -324,7 +324,7 @@ Rectangle {
             anchors.left: playResultsButton.visible ? playResultsButton.right : parent.left
             anchors.leftMargin: playResultsButton.visible ? parent.padding/2 : parent.realLeftPadding
             anchors.verticalCenter: resultsBottomSpacer.verticalCenter
-            font.pixelSize: 23
+            font.pixelSize: 30
             verticalAlignment: Text.AlignVCenter
         }
         Item{
